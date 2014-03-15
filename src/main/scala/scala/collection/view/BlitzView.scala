@@ -1,5 +1,6 @@
 package scala.collection.views
 
+import scala.collection.Parallelizable
 import scala.collection.par._
 import scala.collection.par.Scheduler.Implicits.sequential
 import workstealing.ResultCell
@@ -31,5 +32,34 @@ object BlitzView {
   class Filter[A](p: A => Boolean) extends ViewTransform[A, A] {
     def fold[F](fd: Fold[A, F]): Fold[A, F] =
       (x, acc) => if (p(x)) fd(x, acc) else acc
+  }
+
+  abstract class BlitzView[B] {
+    self =>
+
+    val xs: ParSeq[A] // source list
+    type A // type of source list
+
+    def transform: ViewTransform[A, B] // stack of transforms
+
+    def >>[C](next: ViewTransform[B, C]) = new BlitzView[C] {
+      type A = self.A
+      val xs = self.xs
+      def transform = self.transform >> next
+    }
+
+    def map[C](f: B => C): BlitzView[C] = self >> new Map[B,C](f)
+    def filter(p: B => Boolean): BlitzView[B] = self >> new Filter[B](p)
+
+    //def force = xs.map(f)
+  }
+
+  object View {
+    def apply[T](xss: Parallelizable[T, ParSeq[T]]): BlitzView[T] = apply(xss.par)
+    def apply[T](xss: ParSeq[T]) = new BlitzView[T] {
+      type A = T
+      val xs = xss
+      def transform = new Identity()
+    }
   }
 }
