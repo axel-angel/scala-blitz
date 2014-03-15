@@ -11,11 +11,11 @@ object BlitzView {
 
   abstract class ViewTransform[-A, +B] {
     self =>
-    type Fold[A, F] = (A, F) => F
+    type Fold[A, F] = (A, ResultCell[F]) => ResultCell[F]
 
     def fold[F](g: Fold[B, F]): Fold[A, F]
 
-    def stack[C](next: ViewTransform[B, C]) = new ViewTransform[A, C] {
+    def >>[C](next: ViewTransform[B, C]) = new ViewTransform[A, C] {
       def fold[F](fd: Fold[C, F]): Fold[A, F] = self.fold(next.fold(fd))
     }
   }
