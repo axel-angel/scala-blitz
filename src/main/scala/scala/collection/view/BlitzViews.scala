@@ -7,7 +7,7 @@ import workstealing.ResultCell
 import scala.collection.parallel.immutable.ParSeq
 
 
-object BlitzView {
+object BlitzViews {
 
   abstract class ViewTransform[-A, +B] {
     self =>
