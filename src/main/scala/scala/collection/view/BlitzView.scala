@@ -11,7 +11,7 @@ object BlitzView {
 
   abstract class ViewTransform[-A, +B] {
     self =>
-    type Fold[A, F] = (F, A) => F
+    type Fold[A, F] = (A, F) => F
 
     def fold[F](g: Fold[B, F]): Fold[A, F]
 
@@ -22,11 +22,11 @@ object BlitzView {
 
   class Map[A, B](m: A => B) extends ViewTransform[A, B] {
     def fold[F](fd: Fold[B, F]): Fold[A, F] =
-      (acc, x) => fd(acc, m(x))
+      (x, acc) => fd(m(x), acc)
   }
 
   class Filter[A](p: A => Boolean) extends ViewTransform[A, A] {
     def fold[F](fd: Fold[A, F]): Fold[A, F] =
-      (acc, x) => if (p(x)) fd(acc, x) else acc
+      (x, acc) => if (p(x)) fd(x, acc) else acc
   }
 }
