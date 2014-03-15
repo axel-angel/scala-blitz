@@ -4,7 +4,6 @@ import scala.collection.par._
 import scala.collection.par.Scheduler.Implicits.sequential
 import workstealing.ResultCell
 import scala.collection.parallel.immutable.ParSeq
-import scala.collection.immutable.Range
 
 
 object BlitzView {
