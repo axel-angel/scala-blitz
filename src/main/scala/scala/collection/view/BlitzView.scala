@@ -19,6 +19,10 @@ object BlitzView {
     }
   }
 
+  class Identity[A] extends ViewTransform[A, A] {
+    def fold[F](fd: Fold[A, F]): Fold[A, F] = fd
+  }
+
   class Map[A, B](m: A => B) extends ViewTransform[A, B] {
     def fold[F](fd: Fold[B, F]): Fold[A, F] =
       (x, acc) => fd(m(x), acc)
