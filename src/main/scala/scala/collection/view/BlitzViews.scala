@@ -4,8 +4,6 @@ import scala.collection.Parallelizable
 import scala.collection.par._
 import scala.collection.par.Scheduler.Implicits.sequential
 import workstealing.ResultCell
-import scala.collection.parallel.immutable.ParSeq
-
 
 object BlitzViews {
 
@@ -37,7 +35,7 @@ object BlitzViews {
   abstract class BlitzView[B] {
     self =>
 
-    val xs: ParSeq[A] // source list
+    val xs: Reducable[A] // source list
     type A // type of source list
 
     def transform: ViewTransform[A, B] // stack of transforms
@@ -55,8 +53,8 @@ object BlitzViews {
   }
 
   object View {
-    def apply[T](xss: Parallelizable[T, ParSeq[T]]): BlitzView[T] = apply(xss.par)
-    def apply[T](xss: ParSeq[T]) = new BlitzView[T] {
+    //def apply[T](xss: Parallelizable[T, Reducable[T]]): BlitzView[T] = apply(xss.par)
+    def apply[T](xss: Reducable[T]) = new BlitzView[T] {
       type A = T
       val xs = xss
       def transform = new Identity()
