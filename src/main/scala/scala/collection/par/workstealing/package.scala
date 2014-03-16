@@ -48,6 +48,8 @@ package workstealing {
   class ResultCell[@specialized T] {
     private var r: T = _
     private var empty = true
+    def apply(value: T) = { result_=(value); this }
+    def get(default: T): T = if (empty) default else result
     def result: T = r
     def result_=(v: T) = {
       r = v
