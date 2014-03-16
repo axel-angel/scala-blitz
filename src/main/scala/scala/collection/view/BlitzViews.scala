@@ -51,9 +51,11 @@ object BlitzViews {
 
     def reduce[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R) = {
       def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
-        cell(op(x, cell.get(z)))
+        cell.result = op(x, if (cell.isEmpty) z else cell.result)
+        cell
       }
-      xs.mapFilterReduce[R](transform.fold(folder))(reducer)
+      // FIXME: need to split into own module due to macro stage restriction
+      ???//xs.mapFilterReduce[R](transform.fold(folder))(reducer)
     }
 
     //def force = xs.map(f)
