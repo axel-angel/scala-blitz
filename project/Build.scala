@@ -6,10 +6,8 @@ import java.io.File
 
 
 object BuildSettings {
+  
   val buildSettings = Defaults.defaultSettings ++ Seq (
-    name := "scala-blitz",
-    organization := "com.github.scala-blitz",
-    version := "1.0-SNAPSHOT",
     scalaVersion := "2.11.0-M7",
     scalacOptions ++= Seq("-deprecation", "-optimise"),
     resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
@@ -20,8 +18,18 @@ object BuildSettings {
     ),
     testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
     logBuffered := false,
-    initialCommands in console := "import scala.collection.optimizer._"
+    initialCommands in console := "import scala.collection.optimizer._",
+    organization := "com.github.scala-blitz",
+    version := "1.0-SNAPSHOT"
   )
+  
+  val rootSettings = buildSettings ++ Seq (
+    name := "scala-blitz"
+  )    
+
+  val viewsSettings = buildSettings ++ Seq (
+    name := "scala-blitz-pviews"
+  )    
 }
 
 
@@ -94,8 +102,14 @@ object WorkstealingBuild extends Build {
   lazy val root = Project(
     "root",
     file("."),
-    settings = BuildSettings.buildSettings ++ Seq(benchTask, javaCommandSetting, benchVerboseTask)
+    settings = BuildSettings.rootSettings ++ Seq(benchTask, javaCommandSetting, benchVerboseTask)
   ) dependsOn ()
+
+  lazy val views = Project(
+    "views",
+    file("./views/"),
+    settings = BuildSettings.buildSettings ++ Seq(benchTask, javaCommandSetting, benchVerboseTask)
+  ) dependsOn (root)
 
 }
 
