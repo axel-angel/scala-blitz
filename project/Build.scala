@@ -6,10 +6,8 @@ import java.io.File
 
 
 object BuildSettings {
+
   val buildSettings = Defaults.defaultSettings ++ Seq (
-    name := "scala-blitz",
-    organization := "com.github.scala-blitz",
-    version := "1.0-SNAPSHOT",
     scalaVersion := "2.11.0-M7",
     scalacOptions ++= Seq("-deprecation", "-optimise"),
     resolvers += "Sonatype OSS Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots",
@@ -20,13 +18,23 @@ object BuildSettings {
     ),
     testFrameworks += new TestFramework("org.scalameter.ScalaMeterFramework"),
     logBuffered := false,
-    initialCommands in console := "import scala.collection.optimizer._"
+    initialCommands in console := "import scala.collection.optimizer._",
+    organization := "com.github.scala-blitz",
+    version := "1.0-SNAPSHOT"
+  )
+
+  val rootSettings = buildSettings ++ Seq (
+    name := "scala-blitz"
+  )
+
+  val viewsSettings = buildSettings ++ Seq (
+    name := "scala-blitz-pviews"
   )
 }
 
 
 object WorkstealingBuild extends Build {
-  
+
   def quote(s: Any) = {
     if (scala.util.Properties.isWin) "\"" + s.toString + "\""
     else s.toString
@@ -34,12 +42,12 @@ object WorkstealingBuild extends Build {
 
 
   /* tasks and settings */
-   
+
   val javaCommand = TaskKey[String](
     "java-command",
     "Creates a java vm command for launching a process."
   )
-  
+
   val javaCommandSetting = javaCommand <<= (
     dependencyClasspath in Compile,
     artifactPath in (Compile, packageBin),
@@ -47,7 +55,7 @@ object WorkstealingBuild extends Build {
     packageBin in Compile,
     packageBin in Test
   ) map {
-    (dp, jar, testjar, pbc, pbt) => // -XX:+UseConcMarkSweepGC  -XX:-DoEscapeAnalysis -XX:MaxTenuringThreshold=12 -verbose:gc -XX:+PrintGCDetails 
+    (dp, jar, testjar, pbc, pbt) => // -XX:+UseConcMarkSweepGC  -XX:-DoEscapeAnalysis -XX:MaxTenuringThreshold=12 -verbose:gc -XX:+PrintGCDetails
     val sep = java.io.File.pathSeparator
     val javacommand = "java -Xmx4096m -Xms4096m -XX:+UseCondCardMark -server -cp %s%s%s%s%s".format(
       dp.map(x => quote(x.data)).mkString(sep),
@@ -58,7 +66,7 @@ object WorkstealingBuild extends Build {
     )
     javacommand
   }
-  
+
   val benchTask = InputKey[Unit](
     "bench",
     "Runs a specified benchmark."
@@ -72,7 +80,7 @@ object WorkstealingBuild extends Build {
       comm!
     }
   }
-  
+
   val benchVerboseTask = InputKey[Unit](
     "vbench",
     "Runs a specified benchmark in a verbose mode."
@@ -90,12 +98,18 @@ object WorkstealingBuild extends Build {
   /* projects */
 
   //lazy val scalameter = RootProject(uri("git://github.com/axel22/scalameter.git"))
-  
+
   lazy val root = Project(
     "root",
     file("."),
-    settings = BuildSettings.buildSettings ++ Seq(benchTask, javaCommandSetting, benchVerboseTask)
+    settings = BuildSettings.rootSettings ++ Seq(benchTask, javaCommandSetting, benchVerboseTask)
   ) dependsOn ()
+
+  lazy val views = Project(
+    "views",
+    file("./views/"),
+    settings = BuildSettings.buildSettings ++ Seq(benchTask, javaCommandSetting, benchVerboseTask)
+  ) dependsOn (root)
 
 }
 
