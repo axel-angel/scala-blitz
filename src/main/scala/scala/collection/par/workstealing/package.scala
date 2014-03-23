@@ -55,6 +55,7 @@ package workstealing {
     }
     def isEmpty = empty
     override def toString = if (empty) "ResultCell(empty)" else "ResultCell(" + r + ")"
+    def toOption: Option[T] = if (empty) None else Some(r)
   }
 
   object ResultFound extends Scheduler.TerminationCause {
