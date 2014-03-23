@@ -50,12 +50,12 @@ object BlitzViews {
     def map[C](f: B => C): BlitzView[C] = self >> new Map[B,C](f)
     def filter(p: B => Boolean): BlitzView[B] = self >> new Filter[B](p)
 
-    def reduce[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R) = {
+    def reduce[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R): R = {
       def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
         cell.result = op(x, if (cell.isEmpty) z else cell.result)
         cell
       }
-      xs.mapFilterReduce[R](transform.fold(folder))(reducer)
+      xs.mapFilterReduce[R](transform.fold(folder))(reducer).result
     }
 
     //def force = xs.map(f)
