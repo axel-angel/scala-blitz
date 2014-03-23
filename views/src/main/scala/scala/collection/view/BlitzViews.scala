@@ -62,7 +62,8 @@ object BlitzViews {
   }
 
   object View {
-    //def apply[T](xss: Parallelizable[T, Reducable[T]]): BlitzView[T] = apply(xss.par)
+    def apply[T, Repr](xss: Par[Repr])(implicit conv: IsReducable[Repr, T]): BlitzView[T] =
+      apply(conv(xss))
     def apply[T](xss: Reducable[T]) = new BlitzView[T] {
       type A = T
       val xs = xss
