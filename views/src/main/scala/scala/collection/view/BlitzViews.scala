@@ -58,7 +58,17 @@ object BlitzViews {
       xs.mapFilterReduce[R](transform.fold(folder))(reducer).result
     }
 
-    //def force = xs.map(f)
+    def count(): Int = reduce(0)((_:B, x: Int) => x+1)(_ + _)
+
+    def min()(implicit ord: Ordering[B]): Option[B] = {
+      def foldMin(x: B, cur: ResultCell[B]): ResultCell[B] = {
+        cur.result = if (cur.isEmpty || ord.gt(cur.result, x)) x else cur.result
+        cur
+      }
+      def reduMin(x: B, y: B): B = if (ord.lt(x,y)) x else y
+      xs.mapFilterReduce[B](transform.fold(foldMin))(reduMin).toOption
+    }
+    def max()(implicit ord: Ordering[B]): Option[B] = min()(ord.reverse)
   }
 
   object View {
