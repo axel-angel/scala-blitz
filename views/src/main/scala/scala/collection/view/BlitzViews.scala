@@ -1,9 +1,10 @@
 package scala.collection.views
 
-import scala.collection.Parallelizable
 import scala.collection.par._
 import scala.collection.par.Scheduler.Implicits.sequential
 import workstealing.ResultCell
+import scala.collection.parallel.ParSeq
+import scala.collection.par.generic.IsReducable
 
 object BlitzViews {
 
@@ -54,8 +55,7 @@ object BlitzViews {
         cell.result = op(x, if (cell.isEmpty) z else cell.result)
         cell
       }
-      // FIXME: need to split into own module due to macro stage restriction
-      ???//xs.mapFilterReduce[R](transform.fold(folder))(reducer)
+      xs.mapFilterReduce[R](transform.fold(folder))(reducer)
     }
 
     //def force = xs.map(f)
