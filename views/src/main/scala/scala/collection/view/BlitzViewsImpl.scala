@@ -27,4 +27,17 @@ object View {
     val xs = conv(xss)
     def transform = new ViewTransforms.Identity()
   }
+
+  def apply[T, Repr](xss: Par[Repr], yss: Par[Repr])(implicit conv: IsReducable[Repr, T]): BlitzView[T] = new BlitzViewCC[T] {
+    type A = T
+    val xs = conv(xss)
+    val ys = conv(yss)
+    def transform = new ViewTransforms.Identity()
+  }
+
+  def apply[T](gfunc: Int => T): BlitzView[T] = new BlitzViewG[T] {
+    type A = T
+    val g = gfunc
+    def transform = new ViewTransforms.Identity()
+  }
 }
