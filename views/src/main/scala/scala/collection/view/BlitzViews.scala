@@ -2,10 +2,8 @@ package scala.collection.views
 
 import scala.collection.par._
 import workstealing.ResultCell
-import scala.collection.parallel.ParSeq
-import scala.collection.par.generic.IsReducable
 
-abstract class ViewTransform[-A, +B] {
+trait ViewTransform[-A, +B] {
   self =>
   type Fold[A, F] = (A, ResultCell[F]) => ResultCell[F]
 
