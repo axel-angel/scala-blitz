@@ -1,7 +1,6 @@
 package scala.collection.views
 
 import scala.collection.par._
-import scala.collection.par.Scheduler.Implicits.sequential
 import workstealing.ResultCell
 import scala.collection.parallel.ParSeq
 import scala.collection.par.generic.IsReducable
