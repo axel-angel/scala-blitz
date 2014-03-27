@@ -19,8 +19,6 @@ trait BlitzView[B] { self =>
 
   def transform: ViewTransform[A, B] // stack of transforms
 
-  def >>[C](next: ViewTransform[B, C]): BlitzView[C]
-
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
   def reduce[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
