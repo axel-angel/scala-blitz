@@ -19,11 +19,31 @@ trait BlitzView[B] { self =>
 
   def transform: ViewTransform[A, B] // stack of transforms
 
+  /* methods: V -> V */
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
+  def drop(n: Int): BlitzView[B] = ???
+  def take(n: Int): BlitzView[B] = ???
+  //def flatten[B <: BlitzView[C]](): BlitzView[C] = ??? // TODO
+
+  /* methods: V -> other array structure */
+  def toArray(): Array[B] = ???
+
+  /* methods: V -> V[constant type] */
+  def toInts(): BlitzView[Int] = ???
+  def toDoubles(): BlitzView[Double] = ???
+  def toFloats(): BlitzView[Float] = ???
+  def toBooleans(): BlitzView[Boolean] = ???
+
+  /* methods: V -> 1 */
   def reduce[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
-  def count()(implicit ctx: Scheduler): Int
   def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
   def max()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
+  def sum()(implicit ord: Numeric[B], ctx: Scheduler): B = ???
+
+  /* methods: V -> 1[constant type] */
+  def count()(implicit ctx: Scheduler): Int
+  def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean = ???
+  def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean = ???
 }
 
