@@ -54,4 +54,10 @@ object View {
     val xs = conv(xss.toArray.toPar)
     def transform = new ViewTransforms.Identity()
   }
+
+  /** Decorator example */
+  implicit def addFlatten[S, B <: TraversableOnce[S]](view:BlitzView[B]) = new ViewWithFlatten[S, B](view)
+  class ViewWithFlatten[S, B <: TraversableOnce[S]] (val view:BlitzView[B]) extends AnyVal {
+    def flatten:BlitzView[S] = ???
+  }
 }
