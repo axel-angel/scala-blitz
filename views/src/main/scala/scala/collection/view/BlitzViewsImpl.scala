@@ -40,4 +40,8 @@ object View {
     val g = gfunc
     def transform = new ViewTransforms.Identity()
   }
+  def range(x: Int, y: Int)(implicit ctx: Scheduler): BlitzView[Int] = {
+    val xs = x until (y+1)
+    apply(xs.toPar)(rangeIsZippable(ctx))
+  }
 }
