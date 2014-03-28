@@ -40,4 +40,11 @@ object View {
     val g = gfunc
     def transform = new ViewTransforms.Identity()
   }
+
+  /** Decorator example */
+  class ViewWithFlatten[S, B <: TraversableOnce[S]] (val view:BlitzView[B]) extends AnyVal {
+    def flatten:BlitzView[S] = ???
+  }
+
+  implicit def addFlatten[S, B <: TraversableOnce[S]](view:BlitzView[B]) = new ViewWithFlatten[S, B](view)
 }

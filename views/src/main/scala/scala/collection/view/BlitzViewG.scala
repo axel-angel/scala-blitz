@@ -15,7 +15,7 @@ abstract class BlitzViewG[B] extends BlitzView[B] { self =>
   def map[C](f: B => C): BlitzViewG[C] = ???
   def filter(p: B => Boolean): BlitzViewG[B] = ???
   def reduce[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = ???
-  def count()(implicit ctx: Scheduler): Int = ???
+  def size()(implicit ctx: Scheduler): Int = ???
   def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = ???
   def max()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = ???
 }

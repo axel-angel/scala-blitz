@@ -11,7 +11,7 @@ import scala.reflect.macros._
 package object optimizer {
   final val debugOutput = false
   final def debug(s: String) = if (debugOutput) println(s)
-  final val echoSplicedCode = false
+  final val echoSplicedCode = true
 
   def optimize[T](exp: T) = macro optimize_impl[T]
 
