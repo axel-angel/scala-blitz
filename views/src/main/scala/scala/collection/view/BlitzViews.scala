@@ -20,6 +20,7 @@ trait BlitzView[B] { self =>
   def transform: ViewTransform[A, B] // stack of transforms
 
   /* methods: V -> V */
+  def map[C](next: ViewTransform[B, C]): BlitzView[C] = ???
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
   def drop(n: Int): BlitzView[B] = ???
@@ -42,7 +43,7 @@ trait BlitzView[B] { self =>
   def sum()(implicit ord: Numeric[B], ctx: Scheduler): B = ???
 
   /* methods: V -> 1[constant type] */
-  def count()(implicit ctx: Scheduler): Int
+  def size()(implicit ctx: Scheduler): Int
   def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean = ???
   def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean = ???
 }

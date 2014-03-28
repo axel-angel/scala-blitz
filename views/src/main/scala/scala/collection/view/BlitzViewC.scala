@@ -8,6 +8,9 @@ import workstealing.ResultCell
 abstract class BlitzViewC[B] extends BlitzView[B] { self =>
   val xs: Reducable[A] // source list
 
+  /* methods: V -> V */
+  override def map[C](next: ViewTransform[B, C]): BlitzView[C] = >> [C](next)
+
   def >>[C](next: ViewTransform[B, C]) = new BlitzViewC[C] {
     type A = self.A
     val xs = self.xs
@@ -25,7 +28,7 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
     xs.mapFilterReduce[R](transform.fold(folder))(reducer)(ctx).result
   }
 
-  def count()(implicit ctx: Scheduler): Int =
+  def size()(implicit ctx: Scheduler): Int =
     reduce(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
 
   def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = {
