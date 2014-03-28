@@ -43,7 +43,7 @@ trait BlitzView[B] { self =>
   def sum()(implicit ord: Numeric[B], ctx: Scheduler): B = ???
 
   /* methods: V -> 1[constant type] */
-  def count()(implicit ctx: Scheduler): Int
+  def size()(implicit ctx: Scheduler): Int
   def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean = ???
   def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean = ???
 }

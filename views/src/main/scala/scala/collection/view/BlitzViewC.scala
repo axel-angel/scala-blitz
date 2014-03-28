@@ -28,7 +28,7 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
     xs.mapFilterReduce[R](transform.fold(folder))(reducer)(ctx).result
   }
 
-  def count()(implicit ctx: Scheduler): Int =
+  def size()(implicit ctx: Scheduler): Int =
     reduce(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
 
   def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = {
