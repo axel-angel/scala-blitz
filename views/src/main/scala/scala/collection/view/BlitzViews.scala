@@ -20,6 +20,7 @@ trait BlitzView[B] { self =>
   def transform: ViewTransform[A, B] // stack of transforms
 
   /* methods: V -> V */
+  def map[C](next: ViewTransform[B, C]): BlitzView[C] = ???
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
   def drop(n: Int): BlitzView[B] = ???
