@@ -29,10 +29,10 @@ object View {
     def transform = new ViewTransforms.Identity()
   }
 
-  def apply[T, Repr](xss: Par[Repr], yss: Par[Repr])(implicit conv: IsReducable[Repr, T]): BlitzView[T] = new BlitzViewCC[T] {
+  def apply[T, T1 <: T, T2 <: T](xss: BlitzView[T1], yss: BlitzView[T2]): BlitzView[T] = new BlitzViewVV[T] {
     type A = T
-    val xs = conv(xss)
-    val ys = conv(yss)
+    val xs = xss.asInstanceOf[BlitzView[T]]
+    val ys = yss.asInstanceOf[BlitzView[T]]
     def transform = new ViewTransforms.Identity()
   }
 

@@ -6,16 +6,16 @@ import workstealing.ResultCell
 
 
 /** BlitzView implementation with a two sources Collections. */
-abstract class BlitzViewCC[B] extends BlitzView[B] { self =>
-  val xs: Reducable[A] // 1st source list
-  val ys: Reducable[A] // 2nd source list
+abstract class BlitzViewVV[B] extends BlitzView[B] { self =>
+  val xs: BlitzView[A] // 1st source view
+  val ys: BlitzView[A] // 2nd source view
 
   /* TODO: this files contains only signature yet */
-  def >>[C](next: ViewTransform[B, C]): BlitzViewCC[C] = ???
+  def >>[C](next: ViewTransform[B, C]): BlitzViewVV[C] = ???
 
   override def map[C](next: ViewTransform[B, C]): BlitzView[C] = ???
-  override def map[C](f: B => C): BlitzViewCC[C] = ???
-  override def filter(p: B => Boolean): BlitzViewCC[B] = ???
+  override def map[C](f: B => C): BlitzViewVV[C] = ???
+  override def filter(p: B => Boolean): BlitzViewVV[B] = ???
   override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = ???
   override def size()(implicit ctx: Scheduler): Int = ???
   override def min()(implicit ord: Ordering[B], ctx: Scheduler): B = ???
