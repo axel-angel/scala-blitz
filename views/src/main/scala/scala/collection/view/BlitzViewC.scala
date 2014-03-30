@@ -20,7 +20,7 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
   def map[C](f: B => C): BlitzViewC[C] = self >> new Map[B,C](f)
   def filter(p: B => Boolean): BlitzViewC[B] = self >> new Filter[B](p)
 
-  def reduce[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = {
+  def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = {
     def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
       cell.result = op(x, if (cell.isEmpty) z else cell.result)
       cell
@@ -29,7 +29,7 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
   }
 
   def size()(implicit ctx: Scheduler): Int =
-    reduce(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
+    aggregate(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
 
   def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = {
     def foldMin(x: B, cur: ResultCell[B]): ResultCell[B] = {

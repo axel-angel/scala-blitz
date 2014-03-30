@@ -37,7 +37,7 @@ trait BlitzView[B] { self =>
   def toBooleans(): BlitzView[Boolean] = ???
 
   /* methods: V -> 1 */
-  def reduce[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
+  def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
   def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
   def max()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
   def sum()(implicit ord: Numeric[B], ctx: Scheduler): B = ???
