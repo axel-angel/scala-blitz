@@ -13,11 +13,12 @@ abstract class BlitzViewCC[B] extends BlitzView[B] { self =>
   /* TODO: this files contains only signature yet */
   def >>[C](next: ViewTransform[B, C]): BlitzViewCC[C] = ???
 
-  def map[C](f: B => C): BlitzViewCC[C] = ???
-  def filter(p: B => Boolean): BlitzViewCC[B] = ???
-  def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = ???
-  def size()(implicit ctx: Scheduler): Int = ???
-  def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = ???
-  def max()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = ???
+  override def map[C](next: ViewTransform[B, C]): BlitzView[C] = ???
+  override def map[C](f: B => C): BlitzViewCC[C] = ???
+  override def filter(p: B => Boolean): BlitzViewCC[B] = ???
+  override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = ???
+  override def size()(implicit ctx: Scheduler): Int = ???
+  override def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = ???
+  override def max()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = ???
 }
 

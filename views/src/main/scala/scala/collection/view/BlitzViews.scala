@@ -20,7 +20,7 @@ trait BlitzView[B] { self =>
   def transform: ViewTransform[A, B] // stack of transforms
 
   /* methods: V -> V */
-  def map[C](next: ViewTransform[B, C]): BlitzView[C] = ???
+  def map[C](next: ViewTransform[B, C]): BlitzView[C]
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
   def drop(n: Int): BlitzView[B] = ???
@@ -40,7 +40,8 @@ trait BlitzView[B] { self =>
   def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
   def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
   def max()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
-  def sum()(implicit ord: Numeric[B], ctx: Scheduler): B = ???
+  def sum()(implicit num: Numeric[B], ctx: Scheduler): B =
+    aggregate(num.zero)(num.plus(_, _))(num.plus(_, _))
 
   /* methods: V -> 1[constant type] */
   def size()(implicit ctx: Scheduler): Int
