@@ -7,9 +7,11 @@ import java.util.NoSuchElementException
 
 /** BlitzView implementation with a single source par Collection. */
 abstract class BlitzViewC[B] extends BlitzView[B] { self =>
+  type A // type of source list
   val xs: Reducable[A] // source list
+  def transform: ViewTransform[A, B] // stack of transforms
 
-  def >>[C](next: ViewTransform[B, C]) = new BlitzViewC[C] {
+  override def >>[C](next: ViewTransform[B, C]) = new BlitzViewC[C] {
     type A = self.A
     val xs = self.xs
     def transform = self.transform >> next

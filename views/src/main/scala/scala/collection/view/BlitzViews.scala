@@ -15,9 +15,7 @@ trait ViewTransform[-A, +B] {
 }
 
 trait BlitzView[B] { self =>
-  type A // type of source list
-
-  def transform: ViewTransform[A, B] // stack of transforms
+  def >>[C](next: ViewTransform[B, C]): BlitzView[C] // TODO: shouldn't be here
 
   /* methods: V -> V */
   def map[C](next: ViewTransform[B, C]): BlitzView[C]
