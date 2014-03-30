@@ -19,6 +19,14 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
   override def map[C](f: B => C): BlitzViewC[C] = self >> new Map[B,C](f)
   override def filter(p: B => Boolean): BlitzViewC[B] = self >> new Filter[B](p)
 
+  override def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B = {
+    def folder(x: B, cell: ResultCell[B]): ResultCell[B] = {
+      cell.result = if (cell.isEmpty) x else op(x, cell.result)
+      cell
+    }
+    xs.mapFilterReduce[B](transform.fold(folder))(op)(ctx).result
+  }
+
   override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = {
     def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
       cell.result = op(x, if (cell.isEmpty) z else cell.result)

@@ -16,6 +16,7 @@ abstract class BlitzViewVV[B] extends BlitzView[B] { self =>
   override def map[C](next: ViewTransform[B, C]): BlitzView[C] = ???
   override def map[C](f: B => C): BlitzViewVV[C] = ???
   override def filter(p: B => Boolean): BlitzViewVV[B] = ???
+  override def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B = ???
   override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = ???
   override def size()(implicit ctx: Scheduler): Int = ???
   override def min()(implicit ord: Ordering[B], ctx: Scheduler): B = ???
