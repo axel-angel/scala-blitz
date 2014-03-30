@@ -18,7 +18,7 @@ abstract class BlitzViewCC[B] extends BlitzView[B] { self =>
   override def filter(p: B => Boolean): BlitzViewCC[B] = ???
   override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = ???
   override def size()(implicit ctx: Scheduler): Int = ???
-  override def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = ???
-  override def max()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = ???
+  override def min()(implicit ord: Ordering[B], ctx: Scheduler): B = ???
+  override def max()(implicit ord: Ordering[B], ctx: Scheduler): B = ???
 }
 

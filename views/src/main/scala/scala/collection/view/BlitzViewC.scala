@@ -3,6 +3,7 @@ import ViewTransforms._
 
 import scala.collection.par._
 import workstealing.ResultCell
+import java.util.NoSuchElementException
 
 /** BlitzView implementation with a single source par Collection. */
 abstract class BlitzViewC[B] extends BlitzView[B] { self =>
@@ -29,13 +30,14 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
   override def size()(implicit ctx: Scheduler): Int =
     aggregate(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
 
-  override def min()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = {
+  override def min()(implicit ord: Ordering[B], ctx: Scheduler): B = {
     def foldMin(x: B, cur: ResultCell[B]): ResultCell[B] = {
       cur.result = if (cur.isEmpty || ord.gt(cur.result, x)) x else cur.result
       cur
     }
     def reduMin(x: B, y: B): B = if (ord.lt(x,y)) x else y
-    xs.mapFilterReduce[B](transform.fold(foldMin))(reduMin)(ctx).toOption
+    val r = xs.mapFilterReduce[B](transform.fold(foldMin))(reduMin)(ctx)
+    if (r.isEmpty) throw new NoSuchElementException else r.result
   }
   override def max()(implicit ord: Ordering[B], ctx: Scheduler): B = min()(ord.reverse, ctx)
 }
