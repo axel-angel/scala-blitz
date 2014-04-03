@@ -14,6 +14,9 @@ object A {
     val v = v1 map{_ + 10} filter{_ % 2 == 0} map{_ * 1.0}
     assert(v.size() == 6)
 
+    assert(v.count{_ => true} == 6)
+    assert(v.count{_ % 4 == 0} == 3)
+
     assert(v.aggregate(0.0){_ + _}{_ + _} == 90.0)
     assert(v.reduce{_ + _} == 90.0)
     assert(v.min == 10.0)
