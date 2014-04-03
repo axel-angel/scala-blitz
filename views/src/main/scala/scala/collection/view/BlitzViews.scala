@@ -37,8 +37,12 @@ trait BlitzView[B] { self =>
   /* methods: V -> 1 */
   def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B
   def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
-  def min()(implicit ord: Ordering[B], ctx: Scheduler): B
-  def max()(implicit ord: Ordering[B], ctx: Scheduler): B
+  def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
+  def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
+  def min()(implicit ord: Ordering[B], ctx: Scheduler): B =
+    minOpt()(ord, ctx).get // throws an Exception if empty
+  def max()(implicit ord: Ordering[B], ctx: Scheduler): B =
+    maxOpt()(ord, ctx).get // throws an Exception if empty
   def sum()(implicit num: Numeric[B], ctx: Scheduler): B =
     aggregate(num.zero)(num.plus(_, _))(num.plus(_, _))
 

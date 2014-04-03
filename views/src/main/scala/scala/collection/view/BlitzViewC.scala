@@ -40,16 +40,17 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
   override def size()(implicit ctx: Scheduler): Int =
     aggregate(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
 
-  override def min()(implicit ord: Ordering[B], ctx: Scheduler): B = {
+  override def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = {
     def foldMin(x: B, cur: ResultCell[B]): ResultCell[B] = {
       cur.result = if (cur.isEmpty || ord.gt(cur.result, x)) x else cur.result
       cur
     }
     def reduMin(x: B, y: B): B = if (ord.lt(x,y)) x else y
     val r = xs.mapFilterReduce[B](transform.fold(foldMin))(reduMin)(ctx)
-    if (r.isEmpty) throw new NoSuchElementException else r.result
+    r.toOption
   }
-  override def max()(implicit ord: Ordering[B], ctx: Scheduler): B = min()(ord.reverse, ctx)
+  override def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
+    minOpt()(ord.reverse, ctx)
 
   override def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B] = {
     def folder(x: B, o: Option[B]): Option[B] =

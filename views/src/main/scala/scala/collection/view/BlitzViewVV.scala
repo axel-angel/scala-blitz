@@ -1,5 +1,6 @@
 package scala.collection.views
 import ViewTransforms._
+import ViewUtils._
 
 import scala.collection.par._
 import workstealing.ResultCell
@@ -33,10 +34,10 @@ abstract class BlitzViewVV[B] extends BlitzView[B] { self =>
 
   override def size()(implicit ctx: Scheduler): Int = xs.size() + ys.size()
 
-  override def min()(implicit ord: Ordering[B], ctx: Scheduler): B =
-    ord.min(xs.min(), ys.min())
-  override def max()(implicit ord: Ordering[B], ctx: Scheduler): B =
-    ord.max(xs.max(), ys.max())
+  override def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
+    optCombine(ord.min)(xs.minOpt(), ys.minOpt())
+  override def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
+    optCombine(ord.max)(xs.maxOpt(), ys.maxOpt())
 
   def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B] =
     xs.find(p) orElse ys.find(p)

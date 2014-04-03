@@ -53,3 +53,12 @@ object View {
     def flatten:BlitzView[S] = ???
   }
 }
+
+object ViewUtils {
+  // equivalent to liftA2 for the Option[_] Functor
+  def optCombine[A](f: (A, A) => A)(ox: Option[A], oy: Option[A]): Option[A] =
+    (ox, oy) match {
+      case (Some(x), Some(y)) => Some(f(x, y))
+      case _ => ox.orElse(oy)
+    }
+}
