@@ -37,5 +37,14 @@ abstract class BlitzViewVV[B] extends BlitzView[B] { self =>
     ord.min(xs.min(), ys.min())
   override def max()(implicit ord: Ordering[B], ctx: Scheduler): B =
     ord.max(xs.max(), ys.max())
+
+  def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B] =
+    xs.find(p) orElse ys.find(p)
+
+  def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
+    xs.exists(p) || ys.exists(p)
+
+  def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
+    xs.forall(p) && ys.forall(p)
 }
 

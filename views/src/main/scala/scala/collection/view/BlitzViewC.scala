@@ -50,5 +50,17 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
     if (r.isEmpty) throw new NoSuchElementException else r.result
   }
   override def max()(implicit ord: Ordering[B], ctx: Scheduler): B = min()(ord.reverse, ctx)
+
+  override def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B] = {
+    def folder(x: B, o: Option[B]): Option[B] =
+      if (p(x)) o.orElse(Some(x)) else o
+    aggregate(None: Option[B])(folder)(_.orElse(_))
+  }
+
+  override def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
+    aggregate(false)(p(_) || _)(_ || _)
+
+  override def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
+    aggregate(true)(p(_) && _)(_ && _)
 }
 
