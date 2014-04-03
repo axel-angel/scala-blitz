@@ -40,6 +40,9 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
   override def size()(implicit ctx: Scheduler): Int =
     aggregate(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
 
+  override def count(p: B => Boolean)(implicit ctx: Scheduler): Int =
+    aggregate(0)((x: B, c: Int) => c  + (if (p(x)) 1 else 0))(_ + _)
+
   override def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = {
     def foldMin(x: B, cur: ResultCell[B]): ResultCell[B] = {
       cur.result = if (cur.isEmpty || ord.gt(cur.result, x)) x else cur.result

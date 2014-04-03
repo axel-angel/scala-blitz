@@ -34,6 +34,9 @@ abstract class BlitzViewVV[B] extends BlitzView[B] { self =>
 
   override def size()(implicit ctx: Scheduler): Int = xs.size() + ys.size()
 
+  override def count(p: B => Boolean)(implicit ctx: Scheduler): Int =
+    xs.count(p) + ys.count(p)
+
   override def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
     optCombine(ord.min)(xs.minOpt(), ys.minOpt())
   override def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =

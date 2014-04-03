@@ -48,6 +48,7 @@ trait BlitzView[B] { self =>
 
   /* methods: V -> 1[constant type] */
   def size()(implicit ctx: Scheduler): Int
+  def count(p: B => Boolean)(implicit ctx: Scheduler): Int
   def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B]
   def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean
   def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean
