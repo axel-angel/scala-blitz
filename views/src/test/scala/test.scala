@@ -19,7 +19,16 @@ object A {
     assert(v.min == 10.0)
     assert(v.max == 20.0)
 
-    View((0 until 0).toPar).reduce(_ + _) // FIXME: this should fail!
+    assert(v.find{_ == 20.0} == Some(20.0))
+    assert(v.find{_ == 21.0} == None)
+
+    assert(v.exists{_ >  20.0} == false)
+    assert(v.exists{_ >= 20.0} == true)
+
+    assert(v.forall{_ != 0.0} == true)
+    assert(v.forall{x => x >= 10 && x <= 20} == true)
+
+    //View((0 until 0).toPar).reduce(_ + _) // FIXME: this should fail!
 
     println("tests passed")
   }
