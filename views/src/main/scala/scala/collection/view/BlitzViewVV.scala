@@ -20,10 +20,10 @@ abstract class BlitzViewVV[B] extends BlitzView[B] { self =>
   override def map[C](f: B => C): BlitzViewVV[C] = self >> new Map[B,C](f)
   override def filter(p: B => Boolean): BlitzViewVV[B] = self >> new Filter[B](p)
 
-  override def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B = {
-    val x = xs.reduce(op)(ctx)
-    val y = ys.reduce(op)(ctx)
-    op(x, y)
+  override def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B] = {
+    val x = xs.reduceOpt(op)(ctx)
+    val y = ys.reduceOpt(op)(ctx)
+    ViewUtils.optCombine(op)(x, y)
   }
 
   override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = {
