@@ -27,8 +27,6 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
       cell
     }
     val r = xs.mapFilterReduce[B](transform.fold(folder))(op)(ctx)
-    println(r.isEmpty)
-    println(r.toOption)
     r.toOption
   }
 
