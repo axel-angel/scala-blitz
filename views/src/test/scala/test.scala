@@ -8,6 +8,28 @@ object A {
     testCount(View((0 to 10).toPar))
     testCount(View((0 until 11).toPar))
     testCount(View(View((0 to 5).toPar), View((5 to 10).toPar)))
+    testCount(recView(0 to 10))
+    testCount(View(
+      View(
+        View(vrange(0,1),vrange(2,3)),
+        View(vrange(4,5),vrange(5,6))
+      ),
+      View(
+        vrange(7,7),
+        vrange(8,10)
+      )
+    ))
+  }
+
+  def vrange(x: Int, y: Int) = View((x to y).toPar)
+
+  def recView(xs: Range): BlitzView[Int] = {
+    if (xs.length > 1) {
+      val (l, r) = xs.splitAt(xs.length/2)
+      View(recView(l), recView(r))
+    } else {
+      View(xs.toPar)
+    }
   }
 
   def testCount(v1: BlitzView[Int]) {
