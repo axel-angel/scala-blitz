@@ -53,8 +53,6 @@ object A {
     assert(v.forall{_ != 0.0} == true)
     assert(v.forall{x => x >= 10 && x <= 20} == true)
 
-    //View((0 until 0).toPar).reduce(_ + _) // FIXME: this should fail!
-
     println("tests passed")
   }
 }
