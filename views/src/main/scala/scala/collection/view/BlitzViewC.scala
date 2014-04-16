@@ -35,7 +35,8 @@ abstract class BlitzViewC[B] extends BlitzView[B] { self =>
       cell.result = op(x, if (cell.isEmpty) z else cell.result)
       cell
     }
-    xs.mapFilterReduce[R](transform.fold(folder))(reducer)(ctx).result
+    val ret = xs.mapFilterReduce[R](transform.fold(folder))(reducer)(ctx).result
+    if (ret == null) z else ret
   }
 
   override def size()(implicit ctx: Scheduler): Int =
