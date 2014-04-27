@@ -29,10 +29,10 @@ trait BlitzView[B] { self =>
   def toArray(): Array[B] = ???
 
   /* methods: V -> V[constant type] */
-  def toInts(): BlitzView[Int] = ???
-  def toDoubles(): BlitzView[Double] = ???
-  def toFloats(): BlitzView[Float] = ???
-  def toBooleans(): BlitzView[Boolean] = ???
+  def toInts(implicit f: B => Int): BlitzView[Int] = map(f)
+  def toDoubles(implicit f: B => Double): BlitzView[Double] = map(f)
+  def toFloats(implicit f: B => Float): BlitzView[Float] = map(f)
+  def toBooleans(implicit f: B => Boolean): BlitzView[Boolean] = map(f)
 
   /* methods: V -> 1 */
   def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B]
