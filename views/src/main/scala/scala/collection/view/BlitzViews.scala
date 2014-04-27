@@ -27,6 +27,8 @@ trait BlitzView[B] { self =>
 
   /* methods: V -> other array structure */
   def toArray(): Array[B] = ???
+  def toList()(implicit ctx: Scheduler): List[B] =
+    aggregate(Nil: List[B])((x, xs) => x :: xs)(_ ++ _).reverse
 
   /* methods: V -> V[constant type] */
   def toInts(implicit f: B => Int): BlitzView[Int] = map(f)
