@@ -56,7 +56,7 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   }
 
   private[this] def toList_()(implicit ctx: Scheduler): List[B] =
-    aggregate(Nil: List[B])((x, xs) => x :: xs)(_ ++ _)
+    aggregate(Nil: List[B])((x, xs) => x :: xs)((xs, ys) => ys ++ xs)
 
   def toList()(implicit ctx: Scheduler): List[B] =
     toList_().reverse
