@@ -49,6 +49,8 @@ trait BlitzView[B] { self =>
     maxOpt()(ord, ctx).get // throws an Exception if empty
   def sum()(implicit num: Numeric[B], ctx: Scheduler): B =
     aggregate(num.zero)(num.plus(_, _))(num.plus(_, _))
+  def product()(implicit num: Numeric[B], ctx: Scheduler): B =
+    aggregate(num.one)(num.times(_, _))(num.times(_, _))
 
   /* methods: V -> 1[constant type] */
   def size()(implicit ctx: Scheduler): Int
