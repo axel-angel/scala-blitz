@@ -29,7 +29,7 @@ trait BlitzView[B] {
   def toInts(implicit f: Numeric[B]): BlitzView[Int]
   def toDoubles(implicit f: Numeric[B]): BlitzView[Double]
   def toFloats(implicit f: Numeric[B]): BlitzView[Float]
-  def toLong(implicit f: Numeric[B]): BlitzView[Long]
+  def toLongs(implicit f: Numeric[B]): BlitzView[Long]
 
   /* methods: V -> 1 */
   def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B]

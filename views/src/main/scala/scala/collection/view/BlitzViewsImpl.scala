@@ -65,7 +65,7 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   def toInts(implicit f: Numeric[B]): BlitzView[Int] = map(f.toInt(_))
   def toDoubles(implicit f: Numeric[B]): BlitzView[Double] = map(f.toDouble(_))
   def toFloats(implicit f: Numeric[B]): BlitzView[Float] = map(f.toFloat(_))
-  def toLong(implicit f: Numeric[B]): BlitzView[Long] = map(f.toLong(_))
+  def toLongs(implicit f: Numeric[B]): BlitzView[Long] = map(f.toLong(_))
 
   /* methods: V -> 1 */
   def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B]
