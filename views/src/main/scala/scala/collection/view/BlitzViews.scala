@@ -31,10 +31,10 @@ trait BlitzView[B] { self =>
     aggregate(Nil: List[B])((x, xs) => x :: xs)(_ ++ _).reverse
 
   /* methods: V -> V[constant type] */
-  def toInts(implicit f: B => Int): BlitzView[Int] = map(f)
-  def toDoubles(implicit f: B => Double): BlitzView[Double] = map(f)
-  def toFloats(implicit f: B => Float): BlitzView[Float] = map(f)
-  def toBooleans(implicit f: B => Boolean): BlitzView[Boolean] = map(f)
+  def toInts(implicit f: Numeric[B]): BlitzView[Int] = map(f.toInt(_))
+  def toDoubles(implicit f: Numeric[B]): BlitzView[Double] = map(f.toDouble(_))
+  def toFloats(implicit f: Numeric[B]): BlitzView[Float] = map(f.toFloat(_))
+  def toLong(implicit f: Numeric[B]): BlitzView[Long] = map(f.toLong(_))
 
   /* methods: V -> 1 */
   def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B]
