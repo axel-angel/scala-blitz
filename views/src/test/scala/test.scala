@@ -8,12 +8,12 @@ object A {
     val xs = (0 to 10).toList
     test1(xs, View((0 to 10).toPar))
     test1(xs, View((0 until 11).toPar))
-    test1(xs, View(View((0 to 5).toPar), View((5 to 10).toPar)))
+    test1(xs, View(View((0 to 5).toPar), View((6 to 10).toPar)))
     test1(xs, recView(0 to 10))
     test1(xs, View(
       View(
         View(vrange(0,1),vrange(2,3)),
-        View(vrange(4,5),vrange(5,6))
+        View(vrange(4,5),vrange(6,6))
       ),
       View(
         vrange(7,7),
@@ -42,7 +42,9 @@ object A {
 
   // Compare the results with different folding methods
   def testFolders(l: List[Double], v: BlitzView[Double]) {
-    assert(v.size() == l.size)
+    assert(v.toList == l)
+    assert(v.toArray.toList == l)
+    assert(v.size == l.size)
 
     assert(v.count{_ => true} == l.count{_ => true})
     assert(v.count{_ % 4 == 0} == l.count{_ % 4 == 0})
