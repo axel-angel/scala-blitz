@@ -42,13 +42,24 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   def take(n: Int): BlitzView[B] = ???
 
   /* methods: V -> other array structure */
-  def toArray(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B] = ???
+  def toArray(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B] = {
+    val tmp = toList_().toArray
+    val sz = tmp.size - 1
+    val rng = 0 to (sz / 2)
+    def swap(x: Int) = {
+      val t = tmp(x)
+      tmp(x) = tmp(sz - x)
+      tmp(sz - x) = t
+    }
+    rng.toPar.foreach(swap(_))
+    tmp
+  }
 
-  private[this] def toList0()(implicit ctx: Scheduler): List[B] =
+  private[this] def toList_()(implicit ctx: Scheduler): List[B] =
     aggregate(Nil: List[B])((x, xs) => x :: xs)(_ ++ _)
 
   def toList()(implicit ctx: Scheduler): List[B] =
-    toList0().reverse
+    toList_().reverse
 
   /* methods: V -> V[constant type] */
   def toInts(implicit f: Numeric[B]): BlitzView[Int] = map(f.toInt(_))

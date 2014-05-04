@@ -2,6 +2,7 @@ package scala.collection.views
 
 import scala.collection.par._
 import workstealing.ResultCell
+import scala.reflect.ClassTag
 
 trait ViewTransform[-A, +B] {
   // FIXME: should not depend on Scala Blitz
