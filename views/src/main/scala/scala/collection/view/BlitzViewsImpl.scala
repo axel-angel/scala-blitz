@@ -164,5 +164,23 @@ object Scope {
       }
     }
 
+  // TODO: should we convert to Array, for immutable, stays correct
+  // Or we specialize with hashSetIsReducable (cf: workstealing)
+  // TODO: how to factorize with arrayIsViewable?
+  implicit def setIsViewable[T](implicit ctx: Scheduler, ct: ClassTag[T]) =
+    new IsViewable[Set[T], T] {
+      override def apply(c: Set[T]): BlitzView[T] = {
+        View(c.toArray.toPar)(new Array2ZippableConvertor)
+      }
+    }
+
+  // TODO: same as setIsViewable
+  implicit def mapIsViewable[K,V](implicit ctx: Scheduler, ct1: ClassTag[Tuple2[K,V]]) =
+    new IsViewable[Map[K,V], (K,V)] {
+      override def apply(c: Map[K,V]): BlitzView[(K,V)] = {
+        View(c.toArray.toPar)(new Array2ZippableConvertor)
+      }
+    }
+
 }
 
