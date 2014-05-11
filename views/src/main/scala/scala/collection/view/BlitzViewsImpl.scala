@@ -43,6 +43,7 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   override def toArray()(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B] = {
     val tmp = toList_().toArray
     val sz = tmp.size - 1
+    if (sz < 0) return tmp
     val rng = 0 to (sz / 2)
     def swap(x: Int) = {
       val t = tmp(x)
@@ -190,7 +191,6 @@ object Scope {
       }
     }
 
-  // TODO: toArray crash with out of bounds index 0
   implicit def mHashMapIsViewable[K,V](implicit ctx: Scheduler) =
     new IsViewable[MHashMap[K,V], (K,V)] {
       override def apply(c: MHashMap[K,V]): BlitzView[(K,V)] = {
