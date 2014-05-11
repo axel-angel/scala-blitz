@@ -6,6 +6,7 @@ import scala.collection.par.generic.IsReducable
 import scala.reflect.ClassTag
 import scala.collection.par.workstealing.Arrays.Array2ZippableConvertor
 import scala.annotation.implicitNotFound
+import scala.collection.mutable.{HashMap => MHashMap, HashSet => MHashSet}
 
 trait ViewTransformImpl[-A, +B] extends ViewTransform[A, B] { self =>
   //type Fold[A, F] = (A, ResultCell[F]) => ResultCell[F]
@@ -182,5 +183,19 @@ object Scope {
       }
     }
 
+  implicit def mHashSetIsViewable[T](implicit ctx: Scheduler) =
+    new IsViewable[MHashSet[T], T] {
+      override def apply(c: MHashSet[T]): BlitzView[T] = {
+        View(c.toPar)(hashSetIsReducable)
+      }
+    }
+
+  // TODO: toArray crash with out of bounds index 0
+  implicit def mHashMapIsViewable[K,V](implicit ctx: Scheduler) =
+    new IsViewable[MHashMap[K,V], (K,V)] {
+      override def apply(c: MHashMap[K,V]): BlitzView[(K,V)] = {
+        View(c.toPar)(hashMapIsReducable)
+      }
+    }
 }
 
