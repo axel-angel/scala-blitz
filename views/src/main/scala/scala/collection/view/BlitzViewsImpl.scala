@@ -35,14 +35,11 @@ object ViewTransforms {
 
 trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   /* methods: V -> V */
-  def map[C](next: ViewTransform[B, C]): BlitzView[C]
-  def map[C](f: B => C): BlitzView[C]
-  def filter(p: B => Boolean): BlitzView[B]
-  def drop(n: Int): BlitzView[B] = ???
-  def take(n: Int): BlitzView[B] = ???
+  override def drop(n: Int): BlitzView[B] = ???
+  override def take(n: Int): BlitzView[B] = ???
 
   /* methods: V -> other array structure */
-  def toArray(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B] = {
+  override def toArray()(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B] = {
     val tmp = toList_().toArray
     val sz = tmp.size - 1
     val rng = 0 to (sz / 2)
@@ -58,37 +55,26 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   private[this] def toList_()(implicit ctx: Scheduler): List[B] =
     aggregate(Nil: List[B])((x, xs) => x :: xs)((xs, ys) => ys ++ xs)
 
-  def toList()(implicit ctx: Scheduler): List[B] =
+  override def toList()(implicit ctx: Scheduler): List[B] =
     toList_().reverse
 
   /* methods: V -> V[constant type] */
-  def toInts(implicit f: Numeric[B]): BlitzView[Int] = map(f.toInt(_))
-  def toDoubles(implicit f: Numeric[B]): BlitzView[Double] = map(f.toDouble(_))
-  def toFloats(implicit f: Numeric[B]): BlitzView[Float] = map(f.toFloat(_))
-  def toLongs(implicit f: Numeric[B]): BlitzView[Long] = map(f.toLong(_))
+  override def toInts(implicit f: Numeric[B]): BlitzView[Int] = map(f.toInt(_))
+  override def toDoubles(implicit f: Numeric[B]): BlitzView[Double] = map(f.toDouble(_))
+  override def toFloats(implicit f: Numeric[B]): BlitzView[Float] = map(f.toFloat(_))
+  override def toLongs(implicit f: Numeric[B]): BlitzView[Long] = map(f.toLong(_))
 
   /* methods: V -> 1 */
-  def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B]
-  def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B =
+  override def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B =
     reduceOpt(op)(ctx).get // throws an Exception if empty
-  def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
-  def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
-  def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
-  def min()(implicit ord: Ordering[B], ctx: Scheduler): B =
+  override def min()(implicit ord: Ordering[B], ctx: Scheduler): B =
     minOpt()(ord, ctx).get // throws an Exception if empty
-  def max()(implicit ord: Ordering[B], ctx: Scheduler): B =
+  override def max()(implicit ord: Ordering[B], ctx: Scheduler): B =
     maxOpt()(ord, ctx).get // throws an Exception if empty
-  def sum()(implicit num: Numeric[B], ctx: Scheduler): B =
+  override def sum()(implicit num: Numeric[B], ctx: Scheduler): B =
     aggregate(num.zero)(num.plus(_, _))(num.plus(_, _))
-  def product()(implicit num: Numeric[B], ctx: Scheduler): B =
+  override def product()(implicit num: Numeric[B], ctx: Scheduler): B =
     aggregate(num.one)(num.times(_, _))(num.times(_, _))
-
-  /* methods: V -> 1[constant type] */
-  def size()(implicit ctx: Scheduler): Int
-  def count(p: B => Boolean)(implicit ctx: Scheduler): Int
-  def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B]
-  def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean
-  def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean
 }
 
 object View {
@@ -117,9 +103,11 @@ object View {
   }
 
   /** Decorator example */
-  implicit def addFlatten[S, B <: TraversableOnce[S]](view:BlitzView[B]) = new ViewWithFlatten[S, B](view)
-  class ViewWithFlatten[S, B <: TraversableOnce[S]] (val view:BlitzView[B]) extends AnyVal {
-    def flatten:BlitzView[S] = ???
+  implicit def addFlatten[S, B <: BlitzView[S]](view: BlitzView[B]) =
+    new ViewWithFlatten[S, B](view)
+
+  class ViewWithFlatten[S, B <: BlitzView[S]] (val view: BlitzView[B]) extends AnyVal {
+    def flatten: BlitzView[S] = ???
   }
 }
 

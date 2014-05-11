@@ -22,7 +22,7 @@ trait BlitzView[B] {
   def take(n: Int): BlitzView[B]
 
   /* methods: V -> other array structure */
-  def toArray(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B]
+  def toArray()(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B]
   def toList()(implicit ctx: Scheduler): List[B]
 
   /* methods: V -> V[constant type] */
