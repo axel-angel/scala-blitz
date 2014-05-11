@@ -59,10 +59,14 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
     toList_().reverse
 
   /* methods: V -> V[constant type] */
-  override def toInts(implicit f: Numeric[B]): BlitzView[Int] = map(f.toInt(_))
-  override def toDoubles(implicit f: Numeric[B]): BlitzView[Double] = map(f.toDouble(_))
-  override def toFloats(implicit f: Numeric[B]): BlitzView[Float] = map(f.toFloat(_))
-  override def toLongs(implicit f: Numeric[B]): BlitzView[Long] = map(f.toLong(_))
+  override def toInts(implicit f: Numeric[B]): BlitzView[Int] =
+    map(f.toInt(_))
+  override def toDoubles(implicit f: Numeric[B]): BlitzView[Double] =
+    map(f.toDouble(_))
+  override def toFloats(implicit f: Numeric[B]): BlitzView[Float] =
+    map(f.toFloat(_))
+  override def toLongs(implicit f: Numeric[B]): BlitzView[Long] =
+    map(f.toLong(_))
 
   /* methods: V -> 1 */
   override def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B =
