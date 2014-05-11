@@ -156,5 +156,13 @@ object Scope {
         View(c.toPar)(new Array2ZippableConvertor)
       }
     }
+
+  implicit def rangeIsViewable[L <: Range](implicit ctx: Scheduler) =
+    new IsViewable[L, Int] {
+      override def apply(c: L): BlitzView[Int] = {
+        View(c.toPar)(rangeIsZippable)
+      }
+    }
+
 }
 
