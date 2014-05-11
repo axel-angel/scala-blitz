@@ -123,3 +123,38 @@ object ViewUtils {
       case _ => ox.orElse(oy)
     }
 }
+
+/*
+ * We provide implicit conversions for certain native types. The user can call
+ * bview on the supported classes, the implicit IsViewable for this type kicks
+ * in and attach the bview method to it by converting the type to Viewable.
+ *
+ * As follows: toViewable[L, A] -> search for an implicit IsViewable[L, A]
+ * then: get the appropriate implicit, for eg: arrayIsViewable
+ * this requires an implicit Scheduler in scope, given this one, we can create
+ * an IsViewable instance that can be used as an evidence applied in toViewable.
+ *
+ * toViewable <- arrayIsViewable (<- Scheduler)
+ *  \-> IsViewable -> Viewable with bview
+ */
+object Scope {
+  implicit def toViewable[L, A](col: L)(implicit evidence: IsViewable[L, A]) =
+    new Viewable[L, A](col)(evidence)
+
+  @implicitNotFound("cannot find a valid conversion from ${L} to BlitzView")
+  trait IsViewable[L, A] {
+    def apply(c: L): BlitzView[A]
+  }
+
+  class Viewable[L, A](col: L)(evidence: IsViewable[L, A]) {
+    def bview = evidence.apply(col)
+  }
+
+  implicit def arrayIsViewable[T](implicit ctx: Scheduler) =
+    new IsViewable[Array[T], T] {
+      override def apply(c: Array[T]): BlitzView[T] = {
+        View(c.toPar)(new Array2ZippableConvertor)
+      }
+    }
+}
+
