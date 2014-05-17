@@ -8,33 +8,36 @@ import scala.collection.par.workstealing.Arrays.Array2ZippableConvertor
 import scala.annotation.implicitNotFound
 import scala.collection.mutable.{HashMap => MHashMap, HashSet => MHashSet}
 
-trait ViewTransformImpl[-A, +B] extends ViewTransform[A, B] { self =>
-  //type Fold[A, F] = (A, ResultCell[F]) => ResultCell[F]
+trait ViewTransform[-A, +B] { self =>
+  type Fold[A, F] = (A, ResultCell[F]) => ResultCell[F]
 
   def fold[F](g: Fold[B, F]): Fold[A, F]
 
-  def >>[C](next: ViewTransform[B, C]) = new ViewTransformImpl[A, C] {
+  def >>[C](next: ViewTransform[B, C]) = new ViewTransform[A, C] {
     def fold[F](fd: Fold[C, F]): Fold[A, F] = self.fold(next.fold(fd))
   }
 }
 
 object ViewTransforms {
-  class Identity[A] extends ViewTransformImpl[A, A] {
+  class Identity[A] extends ViewTransform[A, A] {
     def fold[F](fd: Fold[A, F]): Fold[A, F] = fd
   }
 
-  class Map[A, B](m: A => B) extends ViewTransformImpl[A, B] {
+  class Map[A, B](m: A => B) extends ViewTransform[A, B] {
     def fold[F](fd: Fold[B, F]): Fold[A, F] =
       (x, acc) => fd(m(x), acc)
   }
 
-  class Filter[A](p: A => Boolean) extends ViewTransformImpl[A, A] {
+  class Filter[A](p: A => Boolean) extends ViewTransform[A, A] {
     def fold[F](fd: Fold[A, F]): Fold[A, F] =
       (x, acc) => if (p(x)) fd(x, acc) else acc
   }
 }
 
 trait BlitzViewImpl[B] extends BlitzView[B] { self =>
+  /* internals */
+  def >>[C](next: ViewTransform[B, C]): BlitzViewImpl[C]
+
   /* methods: V -> V */
   override def drop(n: Int): BlitzView[B] = ???
   override def take(n: Int): BlitzView[B] = ???
@@ -92,8 +95,8 @@ object View {
 
   def apply[T, T1 <: T, T2 <: T](xss: BlitzView[T1], yss: BlitzView[T2]): BlitzView[T] = new BlitzViewVV[T] {
     type A = T
-    val xs = xss.asInstanceOf[BlitzView[T]]
-    val ys = yss.asInstanceOf[BlitzView[T]]
+    val xs = xss.asInstanceOf[BlitzViewImpl[T]]
+    val ys = yss.asInstanceOf[BlitzViewImpl[T]]
     def transform = new ViewTransforms.Identity()
   }
 

@@ -8,15 +8,14 @@ import workstealing.ResultCell
 
 /** BlitzView implementation with a two sources Collections. */
 abstract class BlitzViewVV[B] extends BlitzViewImpl[B] { self =>
-  val xs: BlitzView[B] // 1st source view
-  val ys: BlitzView[B] // 2nd source view
+  val xs: BlitzViewImpl[B] // 1st source view
+  val ys: BlitzViewImpl[B] // 2nd source view
 
   def >>[C](next: ViewTransform[B, C]) = new BlitzViewVV[C] {
-    val xs = self.xs map next
-    val ys = self.ys map next
+    val xs = self.xs >> next
+    val ys = self.ys >> next
   }
 
-  override def map[C](next: ViewTransform[B, C]): BlitzView[C] = >> [C](next)
   override def map[C](f: B => C): BlitzViewVV[C] = self >> new Map[B,C](f)
   override def filter(p: B => Boolean): BlitzViewVV[B] = self >> new Filter[B](p)
 

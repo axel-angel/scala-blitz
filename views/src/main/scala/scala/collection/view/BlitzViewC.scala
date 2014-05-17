@@ -17,7 +17,6 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
     def transform = self.transform >> next
   }
 
-  override def map[C](next: ViewTransform[B, C]): BlitzView[C] = >> [C](next)
   override def map[C](f: B => C): BlitzViewC[C] = self >> new Map[B,C](f)
   override def filter(p: B => Boolean): BlitzViewC[B] = self >> new Filter[B](p)
 

@@ -4,18 +4,8 @@ import scala.collection.par._
 import workstealing.ResultCell
 import scala.reflect.ClassTag
 
-trait ViewTransform[-A, +B] {
-  // FIXME: should not depend on Scala Blitz
-  type Fold[A, F] = (A, ResultCell[F]) => ResultCell[F]
-
-  def fold[F](g: Fold[B, F]): Fold[A, F]
-
-  def >>[C](next: ViewTransform[B, C]): ViewTransform[A, C]
-}
-
 trait BlitzView[B] {
   /* methods: V -> V */
-  def map[C](next: ViewTransform[B, C]): BlitzView[C]
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
   def drop(n: Int): BlitzView[B]
