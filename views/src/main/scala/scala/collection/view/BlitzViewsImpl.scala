@@ -7,6 +7,7 @@ import scala.reflect.ClassTag
 import scala.collection.par.workstealing.Arrays.Array2ZippableConvertor
 import scala.annotation.implicitNotFound
 import scala.collection.mutable.{HashMap => MHashMap, HashSet => MHashSet}
+import scala.collection.immutable.{HashSet, HashMap}
 
 trait ViewTransform[-A, +B] { self =>
   type Fold[A, F] = (A, ResultCell[F]) => ResultCell[F]
@@ -155,6 +156,8 @@ object Scope {
     def bview = evidence.apply(col)
   }
 
+  /* Specialized simple data lists */
+
   implicit def arrayIsViewable[T](implicit ctx: Scheduler) =
     new IsViewable[Array[T], T] {
       override def apply(c: Array[T]): BlitzView[T] = {
@@ -168,6 +171,26 @@ object Scope {
         View(c.toPar)(rangeIsZippable)
       }
     }
+
+
+  /* Specialized faster Set/Map implementation */
+
+  implicit def hashsetIsViewable[T](implicit ctx: Scheduler, ct: ClassTag[T]) =
+    new IsViewable[HashSet[T], T] {
+      override def apply(c: HashSet[T]): BlitzView[T] = {
+        View(c.toPar)(hashTrieSetIsReducable)
+      }
+    }
+
+  implicit def hashmapIsViewable[K,V](implicit ctx: Scheduler, ct1: ClassTag[Tuple2[K,V]]) =
+    new IsViewable[HashMap[K,V], (K,V)] {
+      override def apply(c: HashMap[K,V]): BlitzView[(K,V)] = {
+        View(c.toPar)(hashTrieMapIsReducable)
+      }
+    }
+
+
+  /* More general slower Set/Map implementation */
 
   // TODO: should we convert to Array, for immutable, stays correct
   // Or we specialize with hashSetIsReducable (cf: workstealing)
@@ -186,6 +209,9 @@ object Scope {
         View(c.toArray.toPar)(new Array2ZippableConvertor)
       }
     }
+
+
+  /* Mutable Set/Map data structures */
 
   implicit def mHashSetIsViewable[T](implicit ctx: Scheduler) =
     new IsViewable[MHashSet[T], T] {
