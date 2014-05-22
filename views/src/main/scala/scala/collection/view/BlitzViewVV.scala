@@ -16,6 +16,13 @@ abstract class BlitzViewVV[B] extends BlitzViewImpl[B] { self =>
     val ys = self.ys >> next
   }
 
+  override def aggInternal[R](z: => R)(op: (B, R) => R, pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
+  {
+    val x = xs.aggInternal(z)(op, pstop)(reducer)(ctx)
+    val y = ys.aggInternal(z)(op, pstop)(reducer)(ctx)
+    ViewUtils.rcCombine(reducer)(x, y)
+  }
+
   override def map[C](f: B => C): BlitzViewVV[C] = self >> new Map[B,C](f)
   override def filter(p: B => Boolean): BlitzViewVV[B] = self >> new Filter[B](p)
 
@@ -26,9 +33,8 @@ abstract class BlitzViewVV[B] extends BlitzViewImpl[B] { self =>
   }
 
   override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = {
-    val x = xs.aggregate(z)(op)(reducer)(ctx)
-    val y = ys.aggregate(z)(op)(reducer)(ctx)
-    reducer(x, y)
+    val x = aggInternal(z)(op, ViewUtils.neverStop)(reducer)(ctx)
+    if (x.isEmpty) z else x.result
   }
 
   override def size()(implicit ctx: Scheduler): Int = xs.size() + ys.size()

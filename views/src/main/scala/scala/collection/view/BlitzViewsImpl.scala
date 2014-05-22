@@ -38,6 +38,7 @@ object ViewTransforms {
 trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   /* internals */
   def >>[C](next: ViewTransform[B, C]): BlitzViewImpl[C]
+  def aggInternal[R](z: => R)(op: (B, R) => R, stopper: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R]
 
   /* methods: V -> V */
   override def drop(n: Int): BlitzView[B] = ???
@@ -128,6 +129,24 @@ object ViewUtils {
       case (Some(x), Some(y)) => Some(f(x, y))
       case _ => ox.orElse(oy)
     }
+
+  def rcCombine[A](f: (A, A) => A)(ox: ResultCell[A], oy: ResultCell[A]): ResultCell[A] =
+    {
+      if (!ox.isEmpty && !oy.isEmpty) {
+        val rc = new ResultCell[A]
+        rc.result = f(ox.result, oy.result)
+        rc
+      } else {
+        if (ox.isEmpty) oy else ox
+      }
+    }
+
+  def toStopper[T,R](pstop: ResultCell[R] => Boolean)
+    (x: T, rc: ResultCell[R]): Boolean = pstop(rc)
+  def neverStop[T,R](rc: ResultCell[R]): Boolean = false
+  def nonEmptyStop[T,R](rc: ResultCell[R]): Boolean = !rc.isEmpty
+  def equalStop[T,R](v: R)(rc: ResultCell[R]): Boolean =
+    !rc.isEmpty && rc.result == v
 }
 
 /*

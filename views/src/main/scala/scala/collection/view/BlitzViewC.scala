@@ -17,6 +17,17 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
     def transform = self.transform >> next
   }
 
+  override def aggInternal[R](z: => R)(op: (B, R) => R, pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
+  {
+    def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
+      cell.result = op(x, if (cell.isEmpty) z else cell.result)
+      cell
+    }
+    val rc = xs.mapFilterReduce[R](transform.fold(folder)
+        , ViewUtils.toStopper(pstop))(reducer)(ctx)
+    rc
+  }
+
   override def map[C](f: B => C): BlitzViewC[C] = self >> new Map[B,C](f)
   override def filter(p: B => Boolean): BlitzViewC[B] = self >> new Filter[B](p)
 
@@ -25,16 +36,14 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
       cell.result = if (cell.isEmpty) x else op(x, cell.result)
       cell
     }
-    val r = xs.mapFilterReduce[B](transform.fold(folder))(op)(ctx)
+    val stopper = ViewUtils.toStopper[A,B](ViewUtils.neverStop)_
+    val r = xs.mapFilterReduce[B](transform.fold(folder), stopper)(op)(ctx)
     r.toOption
   }
 
-  override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = {
-    def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
-      cell.result = op(x, if (cell.isEmpty) z else cell.result)
-      cell
-    }
-    val rc = xs.mapFilterReduce[R](transform.fold(folder))(reducer)(ctx)
+  override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R =
+  {
+    val rc = aggInternal(z)(op, ViewUtils.neverStop)(reducer)(ctx)
     if (rc.isEmpty) z else rc.result
   }
 
@@ -45,13 +54,8 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
     aggregate(0)((x: B, c: Int) => c  + (if (p(x)) 1 else 0))(_ + _)
 
   override def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = {
-    def foldMin(x: B, cur: ResultCell[B]): ResultCell[B] = {
-      cur.result = if (cur.isEmpty || ord.gt(cur.result, x)) x else cur.result
-      cur
-    }
     def reduMin(x: B, y: B): B = if (ord.lt(x,y)) x else y
-    val r = xs.mapFilterReduce[B](transform.fold(foldMin))(reduMin)(ctx)
-    r.toOption
+    reduceOpt(reduMin)(ctx)
   }
   override def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
     minOpt()(ord.reverse, ctx)
@@ -62,10 +66,11 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
     aggregate(None: Option[B])(folder)(_.orElse(_))
   }
 
-  override def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
-    aggregate(false)(p(_) || _)(_ || _)
+  override def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean = {
+    aggInternal(false)(p(_) || _, ViewUtils.equalStop(true))(_ || _).result
+  }
 
   override def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
-    aggregate(true)(p(_) && _)(_ && _)
+    aggInternal(true)(p(_) && _, ViewUtils.equalStop(false))(_ && _).result
 }
 
