@@ -276,8 +276,12 @@ object ReducablesMacros {
     c.inlineAndReset(operation)
   }
 
-  def mapFilterReduce[T: c.WeakTypeTag, U >: T: c.WeakTypeTag, R: c.WeakTypeTag, Repr: c.WeakTypeTag](c: BlackboxContext)(seqop: c.Expr[(U, ResultCell[R]) => ResultCell[R]])
-                                                                                                     (stopPredicate: c.Expr[(U, ResultCell[R]) => Boolean])(reducer: c.Expr[(R, R) => R])(ctx: c.Expr[Scheduler]): c.Expr[ResultCell[R]] = {
+  def mapFilterReduce[T: c.WeakTypeTag, U >: T: c.WeakTypeTag, R: c.WeakTypeTag, Repr: c.WeakTypeTag]
+    (c: BlackboxContext)
+    (seqop: c.Expr[(U, ResultCell[R]) => ResultCell[R]], stopPredicate: c.Expr[(U, ResultCell[R]) => Boolean])
+    (reducer: c.Expr[(R, R) => R])(ctx: c.Expr[Scheduler])
+    : c.Expr[ResultCell[R]] =
+  {
     import c.universe._
 
     val (lv, op) = c.nonFunctionToLocal[(R, R) => R](reducer)
