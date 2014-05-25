@@ -38,7 +38,7 @@ object ViewTransforms {
 trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   /* internals */
   def >>[C](next: ViewTransform[B, C]): BlitzViewImpl[C]
-  def aggInternal[R](z: => R)(op: (B, R) => R, stopper: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R]
+  def aggInternal[R](z: => R)(op: (B, R) => R, stopper: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
 
   /* methods: V -> V */
   override def drop(n: Int): BlitzView[B] = ???

@@ -17,7 +17,7 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
     def transform = self.transform >> next
   }
 
-  override def aggInternal[R](z: => R)(op: (B, R) => R, pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
+  override def aggInternal[R](z: => R)(op: (B, R) => R, pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): R =
   {
     def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
       cell.result = op(x, if (cell.isEmpty) z else cell.result)
@@ -25,7 +25,7 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
     }
     val rc = xs.mapFilterReduce[R](transform.fold(folder)
         , ViewUtils.toStopper(pstop))(reducer)(ctx)
-    rc
+    if (rc.isEmpty) z else rc.result
   }
 
   override def map[C](f: B => C): BlitzViewC[C] = self >> new Map[B,C](f)
@@ -43,8 +43,7 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
 
   override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R =
   {
-    val rc = aggInternal(z)(op, ViewUtils.neverStop)(reducer)(ctx)
-    if (rc.isEmpty) z else rc.result
+    aggInternal(z)(op, ViewUtils.neverStop)(reducer)(ctx)
   }
 
   override def size()(implicit ctx: Scheduler): Int =
@@ -66,11 +65,10 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
     aggregate(None: Option[B])(folder)(_.orElse(_))
   }
 
-  override def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean = {
-    aggInternal(false)(p(_) || _, ViewUtils.equalStop(true))(_ || _).result
-  }
+  override def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
+    aggInternal(false)(p(_) || _, ViewUtils.equalStop(true))(_ || _)
 
   override def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
-    aggInternal(true)(p(_) && _, ViewUtils.equalStop(false))(_ && _).result
+    aggInternal(true)(p(_) && _, ViewUtils.equalStop(false))(_ && _)
 }
 
