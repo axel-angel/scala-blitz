@@ -112,14 +112,6 @@ object View {
     val xs = conv(xss.toArray.toPar)
     def transform = new ViewTransforms.Identity()
   }
-
-  /** Decorator example */
-  implicit def addFlatten[S, B <: BlitzView[S]](view: BlitzView[B]) =
-    new ViewWithFlatten[S, B](view)
-
-  class ViewWithFlatten[S, B <: BlitzView[S]] (val view: BlitzView[B]) extends AnyVal {
-    def flatten: BlitzView[S] = ???
-  }
 }
 
 object ViewUtils {
@@ -245,5 +237,19 @@ object Scope {
         View(c.toPar)(hashMapIsReducable)
       }
     }
+
+
+  /* Provides 'flatten' on nested Views */
+
+  implicit def addFlatten[U, B <: BlitzView[BlitzView[U]]](view: B)(implicit ctx: Scheduler, ct: ClassTag[U]) =
+    new ViewWithFlatten[U, B](view)(ctx, ct)
+
+  class ViewWithFlatten[U, B <: BlitzView[BlitzView[U]]](val view: B)(implicit ctx: Scheduler, ct: ClassTag[U]) extends AnyVal {
+    def flatten: BlitzView[U] = {
+      def nArray = new Array(0) // FIXME: create a new one each time?
+      val xs = view.map{ _.toArray }.aggregate(nArray)(_ ++ _)(_ ++ _)
+      xs.toArray.bview
+    }
+  }
 }
 
