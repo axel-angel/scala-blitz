@@ -292,15 +292,14 @@ object Scope {
 
   /* Provides 'flatten' on nested Views */
 
-  implicit def addFlatten[U, B <: BlitzView[BlitzView[U]]](view: B) =
+  implicit def addFlatten[U, B <: BlitzViewImpl[BlitzViewImpl[U]]](view: B) =
     new ViewWithFlatten[U, B](view)
 
-  class ViewWithFlatten[U, B <: BlitzView[BlitzView[U]]](val view: B) extends AnyVal {
-    def flatten()(implicit ctx: Scheduler, ct: ClassTag[U]): BlitzView[U] = {
-      def combop(xs: Array[U], ys: Array[U]) = ys ++ xs
-      val xs = view.map{ _.toArray }.aggregate(Array.empty[U])(combop)(_ ++ _)
-      xs.toArray.bview
-    }
+  class ViewWithFlatten[U, B <: BlitzViewImpl[BlitzViewImpl[U]]](val view: B) extends AnyVal {
+    def flatten()(implicit ctx: Scheduler, ct: ClassTag[U]): BlitzView[U] =
+      new BlitzViewFlattenVs[U] {
+        val zss = view
+      }
   }
 }
 
