@@ -172,15 +172,15 @@ object ViewUtils {
       case _ => ox.orElse(oy)
     }
 
+  // This reuse the left ResultCell
   def rcCombine[@specialized A](f: (A, A) => A)
     (rcx: ResultCell[A], rcy: ResultCell[A]): ResultCell[A] =
     {
       if (rcx.isEmpty) rcy
       else if (rcy.isEmpty) rcx
       else {
-        val rc = new ResultCell[A]
-        rc.result = f(rcx.result, rcy.result)
-        rc
+        rcx.result = f(rcx.result, rcy.result)
+        rcx
       }
     }
 
