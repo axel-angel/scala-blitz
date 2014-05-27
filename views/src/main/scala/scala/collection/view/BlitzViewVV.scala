@@ -9,7 +9,7 @@ abstract class BlitzViewVV[B] extends BlitzViewImpl[B] { self =>
   val xs: BlitzViewImpl[B] // 1st source view
   val ys: BlitzViewImpl[B] // 2nd source view
 
-  def >>[C](next: ViewTransform[B, C]) = new BlitzViewVV[C] {
+  override def >>[C](next: ViewTransform[B, C]) = new BlitzViewVV[C] {
     val xs = self.xs >> next
     val ys = self.ys >> next
   }
