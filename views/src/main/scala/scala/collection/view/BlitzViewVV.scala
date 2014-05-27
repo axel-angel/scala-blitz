@@ -1,10 +1,8 @@
 package scala.collection.views
 import ViewTransforms._
-import ViewUtils._
 
 import scala.collection.par._
 import workstealing.ResultCell
-
 
 /** BlitzView implementation with a two sources Collections. */
 abstract class BlitzViewVV[B] extends BlitzViewImpl[B] { self =>

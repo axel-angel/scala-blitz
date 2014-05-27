@@ -3,7 +3,6 @@ import ViewTransforms._
 
 import scala.collection.par._
 import workstealing.ResultCell
-import java.util.NoSuchElementException
 
 /** BlitzView implementation with a single source par Collection. */
 abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
