@@ -246,7 +246,8 @@ object Scope {
 
   class ViewWithFlatten[U, B <: BlitzView[BlitzView[U]]](val view: B) extends AnyVal {
     def flatten()(implicit ctx: Scheduler, ct: ClassTag[U]): BlitzView[U] = {
-      val xs = view.map{ _.toArray }.aggregate(Array.empty[U])(_ ++ _)(_ ++ _)
+      def combop(xs: Array[U], ys: Array[U]) = ys ++ xs
+      val xs = view.map{ _.toArray }.aggregate(Array.empty[U])(combop)(_ ++ _)
       xs.toArray.bview
     }
   }
