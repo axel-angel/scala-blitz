@@ -17,58 +17,11 @@ abstract class BlitzViewC[B] extends BlitzViewImpl[B] { self =>
     def transform = self.transform >> next
   }
 
-  override def aggInternal[R](z: => R)(op: (B, R) => R, pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): R =
+  override def aggInternal[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
   {
-    def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
-      cell.result = op(x, if (cell.isEmpty) z else cell.result)
-      cell
-    }
-    val rc = xs.mapFilterReduce[R](transform.fold(folder)
-        , ViewUtils.toStopper(pstop))(reducer)(ctx)
-    if (rc.isEmpty) z else rc.result
+    val stopper = ViewUtils.toStopper(pstop)_
+    xs.mapFilterReduce[R](transform.fold(op), stopper)(reducer)(ctx)
   }
 
-  override def map[C](f: B => C): BlitzViewC[C] = self >> new Map[B,C](f)
-  override def filter(p: B => Boolean): BlitzViewC[B] = self >> new Filter[B](p)
-
-  override def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B] = {
-    def folder(x: B, cell: ResultCell[B]): ResultCell[B] = {
-      cell.result = if (cell.isEmpty) x else op(x, cell.result)
-      cell
-    }
-    val stopper = ViewUtils.toStopper[A,B](ViewUtils.neverStop)_
-    val r = xs.mapFilterReduce[B](transform.fold(folder), stopper)(op)(ctx)
-    r.toOption
-  }
-
-  override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R =
-  {
-    aggInternal(z)(op, ViewUtils.neverStop)(reducer)(ctx)
-  }
-
-  override def size()(implicit ctx: Scheduler): Int =
-    aggregate(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
-
-  override def count(p: B => Boolean)(implicit ctx: Scheduler): Int =
-    aggregate(0)((x: B, c: Int) => c  + (if (p(x)) 1 else 0))(_ + _)
-
-  override def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] = {
-    def reduMin(x: B, y: B): B = if (ord.lt(x,y)) x else y
-    reduceOpt(reduMin)(ctx)
-  }
-  override def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
-    minOpt()(ord.reverse, ctx)
-
-  override def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B] = {
-    def folder(x: B, o: Option[B]): Option[B] =
-      if (p(x)) o.orElse(Some(x)) else o
-    aggregate(None: Option[B])(folder)(_.orElse(_))
-  }
-
-  override def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
-    aggInternal(false)(p(_) || _, ViewUtils.equalStop(true))(_ || _)
-
-  override def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
-    aggInternal(true)(p(_) && _, ViewUtils.equalStop(false))(_ && _)
 }
 

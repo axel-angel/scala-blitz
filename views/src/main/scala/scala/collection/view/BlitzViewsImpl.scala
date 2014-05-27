@@ -38,11 +38,15 @@ object ViewTransforms {
 trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   /* internals */
   def >>[C](next: ViewTransform[B, C]): BlitzViewImpl[C]
-  def aggInternal[R](z: => R)(op: (B, R) => R, stopper: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
+  def aggInternal[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R]
+
 
   /* methods: V -> V */
-  override def drop(n: Int): BlitzView[B] = ???
-  override def take(n: Int): BlitzView[B] = ???
+  override def map[C](f: B => C) = self >> new ViewTransforms.Map[B,C](f)
+  override def filter(p: B => Boolean) = self >> new ViewTransforms.Filter[B](p)
+  override def drop(n: Int): BlitzView[B] = ??? // TODO
+  override def take(n: Int): BlitzView[B] = ??? // TODO
+
 
   /* methods: V -> other array structure */
   override def toArray()(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B] = {
@@ -65,6 +69,7 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   override def toList()(implicit ctx: Scheduler): List[B] =
     toList_().reverse
 
+
   /* methods: V -> V[constant type] */
   override def toInts(implicit f: Numeric[B]): BlitzView[Int] =
     map(f.toInt(_))
@@ -75,7 +80,52 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   override def toLongs(implicit f: Numeric[B]): BlitzView[Long] =
     map(f.toLong(_))
 
+
   /* methods: V -> 1 */
+  override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = {
+    def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
+      cell.result = op(x, if (cell.isEmpty) z else cell.result)
+      cell
+    }
+    val stopper = ViewUtils.neverStop[B,R]_
+    aggInternal(folder, stopper)(reducer)(ctx).toOption.getOrElse(z)
+  }
+
+  override def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B] = {
+    def folder(x: B, cell: ResultCell[B]): ResultCell[B] = {
+      cell.result = if (cell.isEmpty) x else op(x, cell.result)
+      cell
+    }
+    aggInternal(folder, ViewUtils.neverStop[B,B])(op)(ctx).toOption
+  }
+
+  override def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B] = {
+    def folder(x: B, rc: ResultCell[B]): ResultCell[B] = {
+      if (rc.isEmpty && p(x)) rc.result = x
+      rc
+    }
+    aggInternal(folder, ViewUtils.nonEmptyStop[B,B])((x, y) => x).toOption
+  }
+
+  override def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean = {
+    def folder(x: B, rc: ResultCell[Boolean]): ResultCell[Boolean] = {
+      if (p(x)) rc.result = true
+      rc
+    }
+    val stopper = ViewUtils.equalStop(true)_
+    aggInternal(folder, stopper)(_ || _).toOption.getOrElse(false)
+  }
+
+  override def size()(implicit ctx: Scheduler): Int =
+    aggregate(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
+  override def count(p: B => Boolean)(implicit ctx: Scheduler): Int =
+    aggregate(0)((x: B, c: Int) => c  + (if (p(x)) 1 else 0))(_ + _)
+  override def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
+    reduceOpt((x: B, y: B) => if (ord.lt(x,y)) x else y)(ctx)
+  override def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
+    minOpt()(ord.reverse, ctx)
+  override def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
+    !exists(x => !p(x))(ctx)
   override def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B =
     reduceOpt(op)(ctx).get // throws an Exception if empty
   override def min()(implicit ord: Ordering[B], ctx: Scheduler): B =
@@ -122,14 +172,15 @@ object ViewUtils {
       case _ => ox.orElse(oy)
     }
 
-  def rcCombine[A](f: (A, A) => A)(ox: ResultCell[A], oy: ResultCell[A]): ResultCell[A] =
+  def rcCombine[@specialized A](f: (A, A) => A)
+    (rcx: ResultCell[A], rcy: ResultCell[A]): ResultCell[A] =
     {
-      if (!ox.isEmpty && !oy.isEmpty) {
+      if (rcx.isEmpty) rcy
+      else if (rcy.isEmpty) rcx
+      else {
         val rc = new ResultCell[A]
-        rc.result = f(ox.result, oy.result)
+        rc.result = f(rcx.result, rcy.result)
         rc
-      } else {
-        if (ox.isEmpty) oy else ox
       }
     }
 
