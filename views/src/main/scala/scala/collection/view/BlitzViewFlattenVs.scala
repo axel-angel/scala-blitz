@@ -16,7 +16,7 @@ abstract class BlitzViewFlattenVs[B] extends BlitzViewImpl[B] { self =>
   {
     def folder(xss: BlitzViewImpl[B], rc: ResultCell[R]): ResultCell[R] = {
       val xrc = xss.aggInternal(op, pstop)(reducer)(ctx)
-      ViewUtils.rcCombine(reducer)(xrc, rc)
+      ViewUtils.rcCombine(reducer)(rc, xrc)
     }
     zss.aggInternal(folder, pstop)(reducer)(ctx)
   }
