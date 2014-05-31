@@ -41,6 +41,16 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
   def aggInternal[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R]
 
 
+  /* operators */
+  override def ++(y: BlitzView[B]): BlitzView[B] = y match {
+    case _ys: BlitzViewImpl[B] => new BlitzViewVV[B] {
+      val xs = self
+      val ys = _ys
+    }
+    case _ => sys.error("operation not implemented")
+  }
+  override def :::(ys: BlitzView[B]): BlitzView[B] = ys ++ self
+
   /* methods: V -> V */
   override def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler) = {
     def flatMapper(x: B): BlitzViewImpl[C] = Scope.arrayIsViewable(ctx)(f(x))

@@ -5,6 +5,10 @@ import workstealing.ResultCell
 import scala.reflect.ClassTag
 
 trait BlitzView[B] {
+  /* operators */
+  def ++(ys: BlitzView[B]): BlitzView[B]
+  def :::(ys: BlitzView[B]): BlitzView[B]
+
   /* methods: V -> V */
   def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler): BlitzView[C]
   def map[C](f: B => C): BlitzView[C]
