@@ -8,6 +8,7 @@ trait BlitzView[B] {
   /* operators */
   def ++(ys: BlitzView[B]): BlitzView[B]
   def :::(ys: BlitzView[B]): BlitzView[B]
+  def ::(y: B)(implicit classtag: ClassTag[B], ctx: Scheduler): BlitzView[B]
 
   /* methods: V -> V */
   def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler): BlitzView[C]

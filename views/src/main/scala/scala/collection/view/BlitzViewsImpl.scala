@@ -50,6 +50,8 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
     case _ => sys.error("operation not implemented")
   }
   override def :::(ys: BlitzView[B]): BlitzView[B] = ys ++ self
+  override def ::(y: B)(implicit classtag: ClassTag[B], ctx: Scheduler) =
+    Scope.arrayIsViewable(ctx)(Array[B](y)) ++ self
 
   /* methods: V -> V */
   override def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler) = {
