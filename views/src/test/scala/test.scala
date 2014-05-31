@@ -1,14 +1,14 @@
-import scala.collection.par._
 import scala.collection.views._
 import scala.collection.views.ViewTransforms._
 import scala.collection.par.Scheduler.Implicits.sequential
+import scala.collection.views.Scope._
 
 object A {
   def main(args: Array[String]) {
     val xs = (0 to 10).toList
-    testAll(xs, View((0 to 10).toPar))
-    testAll(xs, View((0 until 11).toPar))
-    testAll(xs, View(View((0 to 5).toPar), View((6 to 10).toPar)))
+    testAll(xs, (0 to 10).bview)
+    testAll(xs, (0 until 11).bview)
+    testAll(xs, View((0 to 5).bview, (6 to 10).bview))
     testAll(xs, recView(0 to 10))
     testAll(xs, View(
       View(
@@ -22,14 +22,14 @@ object A {
     ))
   }
 
-  def vrange(x: Int, y: Int) = View((x to y).toPar)
+  def vrange(x: Int, y: Int) = (x to y).bview
 
-  def recView(xs: Range): BlitzView[Int] = {
+  def recView(xs: Range): BlitzViewImpl[Int] = {
     if (xs.length > 1) {
       val (l, r) = xs.splitAt(xs.length/2)
       View(recView(l), recView(r))
     } else {
-      View(xs.toPar)
+      xs.bview
     }
   }
 
