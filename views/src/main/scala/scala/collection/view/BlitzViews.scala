@@ -6,6 +6,7 @@ import scala.reflect.ClassTag
 
 trait BlitzView[B] {
   /* methods: V -> V */
+  def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler): BlitzView[C]
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
   def drop(n: Int): BlitzView[B]

@@ -42,6 +42,12 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
 
 
   /* methods: V -> V */
+  override def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler) = {
+    def flatMapper(x: B): BlitzViewImpl[C] = Scope.arrayIsViewable(ctx)(f(x))
+    new BlitzViewFlattenVs[C] {
+      val zss = self >> new ViewTransforms.Map[B,BlitzViewImpl[C]](flatMapper)
+    }
+  }
   override def map[C](f: B => C) = self >> new ViewTransforms.Map[B,C](f)
   override def filter(p: B => Boolean) = self >> new ViewTransforms.Filter[B](p)
   override def drop(n: Int): BlitzView[B] = ??? // TODO
@@ -139,25 +145,25 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
 }
 
 object View {
-  def apply[T, Repr](xss: Par[Repr])(implicit conv: IsReducable[Repr, T]): BlitzView[T] = new BlitzViewC[T] {
+  def apply[T, Repr](xss: Par[Repr])(implicit conv: IsReducable[Repr, T]): BlitzViewImpl[T] = new BlitzViewC[T] {
     type A = T
     val xs = conv(xss)
     def transform = new ViewTransforms.Identity()
   }
 
-  def apply[T, T1 <: T, T2 <: T](xss: BlitzView[T1], yss: BlitzView[T2]): BlitzView[T] = new BlitzViewVV[T] {
+  def apply[T, T1 <: T, T2 <: T](xss: BlitzViewImpl[T1], yss: BlitzViewImpl[T2]): BlitzViewImpl[T] = new BlitzViewVV[T] {
     type A = T
     val xs = xss.asInstanceOf[BlitzViewImpl[T]]
     val ys = yss.asInstanceOf[BlitzViewImpl[T]]
     def transform = new ViewTransforms.Identity()
   }
 
-  def range(x: Int, y: Int)(implicit ctx: Scheduler): BlitzView[Int] = {
+  def range(x: Int, y: Int)(implicit ctx: Scheduler): BlitzViewImpl[Int] = {
     val xs = x until (y+1)
     apply(xs.toPar)(rangeIsZippable(ctx))
   }
 
-  def of[T](xss: T*)(implicit conv: IsReducable[Array[T], T], c: ClassTag[T]): BlitzView[T] = new BlitzViewC[T] {
+  def of[T](xss: T*)(implicit conv: IsReducable[Array[T], T], c: ClassTag[T]): BlitzViewImpl[T] = new BlitzViewC[T] {
     type A = T
     val xs = conv(xss.toArray.toPar)
     def transform = new ViewTransforms.Identity()
@@ -211,25 +217,25 @@ object Scope {
 
   @implicitNotFound("cannot find a valid conversion from ${L} to BlitzView")
   trait IsViewable[L, A] {
-    def apply(c: L): BlitzView[A]
+    def apply(c: L): BlitzViewImpl[A]
   }
 
   class Viewable[L, A](col: L)(evidence: IsViewable[L, A]) {
-    def bview = evidence.apply(col)
+    def bview: BlitzViewImpl[A] = evidence.apply(col)
   }
 
   /* Specialized simple data lists */
 
   implicit def arrayIsViewable[T](implicit ctx: Scheduler) =
     new IsViewable[Array[T], T] {
-      override def apply(c: Array[T]): BlitzView[T] = {
+      override def apply(c: Array[T]): BlitzViewImpl[T] = {
         View(c.toPar)(new Array2ZippableConvertor)
       }
     }
 
   implicit def rangeIsViewable[L <: Range](implicit ctx: Scheduler) =
     new IsViewable[L, Int] {
-      override def apply(c: L): BlitzView[Int] = {
+      override def apply(c: L): BlitzViewImpl[Int] = {
         View(c.toPar)(rangeIsZippable)
       }
     }
@@ -239,14 +245,14 @@ object Scope {
 
   implicit def hashsetIsViewable[T](implicit ctx: Scheduler, ct: ClassTag[T]) =
     new IsViewable[HashSet[T], T] {
-      override def apply(c: HashSet[T]): BlitzView[T] = {
+      override def apply(c: HashSet[T]): BlitzViewImpl[T] = {
         View(c.toPar)(hashTrieSetIsReducable)
       }
     }
 
   implicit def hashmapIsViewable[K,V](implicit ctx: Scheduler, ct1: ClassTag[Tuple2[K,V]]) =
     new IsViewable[HashMap[K,V], (K,V)] {
-      override def apply(c: HashMap[K,V]): BlitzView[(K,V)] = {
+      override def apply(c: HashMap[K,V]): BlitzViewImpl[(K,V)] = {
         View(c.toPar)(hashTrieMapIsReducable)
       }
     }
@@ -259,7 +265,7 @@ object Scope {
   // TODO: how to factorize with arrayIsViewable?
   implicit def setIsViewable[T](implicit ctx: Scheduler, ct: ClassTag[T]) =
     new IsViewable[Set[T], T] {
-      override def apply(c: Set[T]): BlitzView[T] = {
+      override def apply(c: Set[T]): BlitzViewImpl[T] = {
         View(c.toArray.toPar)(new Array2ZippableConvertor)
       }
     }
@@ -267,7 +273,7 @@ object Scope {
   // TODO: same as setIsViewable
   implicit def mapIsViewable[K,V](implicit ctx: Scheduler, ct1: ClassTag[Tuple2[K,V]]) =
     new IsViewable[Map[K,V], (K,V)] {
-      override def apply(c: Map[K,V]): BlitzView[(K,V)] = {
+      override def apply(c: Map[K,V]): BlitzViewImpl[(K,V)] = {
         View(c.toArray.toPar)(new Array2ZippableConvertor)
       }
     }
@@ -277,14 +283,14 @@ object Scope {
 
   implicit def mHashSetIsViewable[T](implicit ctx: Scheduler) =
     new IsViewable[MHashSet[T], T] {
-      override def apply(c: MHashSet[T]): BlitzView[T] = {
+      override def apply(c: MHashSet[T]): BlitzViewImpl[T] = {
         View(c.toPar)(hashSetIsReducable)
       }
     }
 
   implicit def mHashMapIsViewable[K,V](implicit ctx: Scheduler) =
     new IsViewable[MHashMap[K,V], (K,V)] {
-      override def apply(c: MHashMap[K,V]): BlitzView[(K,V)] = {
+      override def apply(c: MHashMap[K,V]): BlitzViewImpl[(K,V)] = {
         View(c.toPar)(hashMapIsReducable)
       }
     }
