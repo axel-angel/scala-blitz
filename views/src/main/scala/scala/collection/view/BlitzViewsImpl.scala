@@ -308,6 +308,20 @@ object Scope {
     }
 
 
+  /* Optional */
+
+  implicit def optionIsViewable[T] =
+    new IsViewable[Option[T], T] {
+      override def apply(_ox: Option[T]) = {
+        new BlitzViewO[T] {
+          type A = T
+          val ox = _ox
+          def transform = new ViewTransforms.Identity()
+        }
+      }
+    }
+
+
   /* Provides 'flatten' on nested Views */
 
   implicit def addFlatten[U, B <: BlitzViewImpl[BlitzViewImpl[U]]](view: B) =
