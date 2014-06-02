@@ -50,8 +50,8 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
     case _ => sys.error("operation not implemented")
   }
   override def :::(ys: BlitzView[B]): BlitzView[B] = ys ++ self
-  override def ::(y: B)(implicit classtag: ClassTag[B], ctx: Scheduler) =
-    Scope.arrayIsViewable(ctx)(Array[B](y)) ++ self
+  override def ::(y: B) =
+    View.singleton(y) ++ self
 
   /* methods: V -> V */
   override def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler) = {
@@ -178,6 +178,12 @@ object View {
   def of[T](xss: T*)(implicit conv: IsReducable[Array[T], T], c: ClassTag[T]): BlitzViewImpl[T] = new BlitzViewC[T] {
     type A = T
     val xs = conv(xss.toArray.toPar)
+    def transform = new ViewTransforms.Identity()
+  }
+
+  def singleton[T](_x: T): BlitzViewImpl[T] = new BlitzViewS[T] {
+    type A = T
+    val x = _x
     def transform = new ViewTransforms.Identity()
   }
 }
