@@ -4,11 +4,11 @@ import scala.collection.par._
 import workstealing.ResultCell
 import scala.reflect.ClassTag
 
-trait BlitzView[B] {
+trait BlitzView[+B] {
   /* operators */
-  def ++(ys: BlitzView[B]): BlitzView[B]
-  def :::(ys: BlitzView[B]): BlitzView[B]
-  def ::(y: B): BlitzView[B]
+  def ++[A >: B](ys: BlitzView[A]): BlitzView[A]
+  def :::[A >: B](ys: BlitzView[A]): BlitzView[A]
+  def ::[A >: B](y: A): BlitzView[A]
 
   /* methods: V -> V */
   def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler): BlitzView[C]
@@ -18,25 +18,25 @@ trait BlitzView[B] {
   def take(n: Int): BlitzView[B]
 
   /* methods: V -> other array structure */
-  def toArray()(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B]
-  def toList()(implicit ctx: Scheduler): List[B]
+  def toArray[A >: B]()(implicit ct: ClassTag[B], ctx: Scheduler): Array[A]
+  def toList[A >: B]()(implicit ctx: Scheduler): List[A]
 
   /* methods: V -> V[constant type] */
-  def toInts(implicit f: Numeric[B]): BlitzView[Int]
-  def toDoubles(implicit f: Numeric[B]): BlitzView[Double]
-  def toFloats(implicit f: Numeric[B]): BlitzView[Float]
-  def toLongs(implicit f: Numeric[B]): BlitzView[Long]
+  def toInts[A >: B](implicit f: Numeric[A]): BlitzView[Int]
+  def toDoubles[A >: B](implicit f: Numeric[A]): BlitzView[Double]
+  def toFloats[A >: B](implicit f: Numeric[A]): BlitzView[Float]
+  def toLongs[A >: B](implicit f: Numeric[A]): BlitzView[Long]
 
   /* methods: V -> 1 */
-  def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B]
-  def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B
-  def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
-  def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
-  def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B]
-  def min()(implicit ord: Ordering[B], ctx: Scheduler): B
-  def max()(implicit ord: Ordering[B], ctx: Scheduler): B
-  def sum()(implicit num: Numeric[B], ctx: Scheduler): B
-  def product()(implicit num: Numeric[B], ctx: Scheduler): B
+  def reduceOpt[A >: B](op: (A, A) => A)(implicit ctx: Scheduler): Option[A]
+  def reduce[A >: B](op: (A, A) => A)(implicit ctx: Scheduler): A
+  def aggregate[R, A >: B](z: => R)(op: (A, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R
+  def minOpt[A >: B]()(implicit ord: Ordering[A], ctx: Scheduler): Option[A]
+  def maxOpt[A >: B]()(implicit ord: Ordering[A], ctx: Scheduler): Option[A]
+  def min[A >: B]()(implicit ord: Ordering[A], ctx: Scheduler): A
+  def max[A >: B]()(implicit ord: Ordering[A], ctx: Scheduler): A
+  def sum[A >: B]()(implicit num: Numeric[A], ctx: Scheduler): A
+  def product[A >: B]()(implicit num: Numeric[A], ctx: Scheduler): A
 
   /* methods: V -> 1[constant type] */
   def size()(implicit ctx: Scheduler): Int

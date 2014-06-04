@@ -35,22 +35,22 @@ object ViewTransforms {
   }
 }
 
-trait BlitzViewImpl[B] extends BlitzView[B] { self =>
+trait BlitzViewImpl[+B] extends BlitzView[B] { self =>
   /* internals */
   def >>[C](next: ViewTransform[B, C]): BlitzViewImpl[C]
   def aggInternal[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R]
 
 
   /* operators */
-  override def ++(y: BlitzView[B]): BlitzView[B] = y match {
+  override def ++[A >: B](y: BlitzView[A]): BlitzView[A] = y match {
     case _ys: BlitzViewImpl[B] => new BlitzViewVV[B] {
       val xs = self
       val ys = _ys
     }
     case _ => sys.error("operation not implemented")
   }
-  override def :::(ys: BlitzView[B]): BlitzView[B] = ys ++ self
-  override def ::(y: B) =
+  override def :::[A >: B](ys: BlitzView[A]): BlitzView[A] = ys ++ self
+  override def ::[A >: B](y: A) =
     View.singleton(y) ++ self
 
   /* methods: V -> V */
@@ -67,10 +67,10 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
 
 
   /* methods: V -> other array structure */
-  override def toArray()(implicit classtag: ClassTag[B], ctx: Scheduler): Array[B] = {
+  override def toArray[A >: B]()(implicit ct: ClassTag[B], ctx: Scheduler): Array[A] = {
     val tmp = toList_().toArray
     val sz = tmp.size - 1
-    if (sz < 0) return tmp
+    if (sz < 0) return tmp.asInstanceOf[Array[A]] // TODO: ?
     val rng = 0 to (sz / 2)
     def swap(x: Int) = {
       val t = tmp(x)
@@ -78,29 +78,29 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
       tmp(sz - x) = t
     }
     rng.toPar.foreach(swap(_))
-    tmp
+    tmp.asInstanceOf[Array[A]] // TODO: ?
   }
 
-  private[this] def toList_()(implicit ctx: Scheduler): List[B] =
-    aggregate(Nil: List[B])((x, xs) => x :: xs)((xs, ys) => ys ++ xs)
+  private[this] def toList_[A >: B]()(implicit ctx: Scheduler): List[A] =
+    aggregate(Nil: List[A])((x, xs) => x :: xs)((xs, ys) => ys ++ xs)
 
-  override def toList()(implicit ctx: Scheduler): List[B] =
+  override def toList[A >: B]()(implicit ctx: Scheduler): List[A] =
     toList_().reverse
 
 
   /* methods: V -> V[constant type] */
-  override def toInts(implicit f: Numeric[B]): BlitzView[Int] =
+  override def toInts[A >: B](implicit f: Numeric[A]): BlitzView[Int] =
     map(f.toInt(_))
-  override def toDoubles(implicit f: Numeric[B]): BlitzView[Double] =
+  override def toDoubles[A >: B](implicit f: Numeric[A]): BlitzView[Double] =
     map(f.toDouble(_))
-  override def toFloats(implicit f: Numeric[B]): BlitzView[Float] =
+  override def toFloats[A >: B](implicit f: Numeric[A]): BlitzView[Float] =
     map(f.toFloat(_))
-  override def toLongs(implicit f: Numeric[B]): BlitzView[Long] =
+  override def toLongs[A >: B](implicit f: Numeric[A]): BlitzView[Long] =
     map(f.toLong(_))
 
 
   /* methods: V -> 1 */
-  override def aggregate[R](z: => R)(op: (B, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = {
+  override def aggregate[R, A >: B](z: => R)(op: (A, R) => R)(reducer: (R, R) => R)(implicit ctx: Scheduler): R = {
     def folder(x: B, cell: ResultCell[R]): ResultCell[R] = {
       cell.result = op(x, if (cell.isEmpty) z else cell.result)
       cell
@@ -109,12 +109,12 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
     aggInternal(folder, stopper)(reducer)(ctx).toOption.getOrElse(z)
   }
 
-  override def reduceOpt(op: (B, B) => B)(implicit ctx: Scheduler): Option[B] = {
-    def folder(x: B, cell: ResultCell[B]): ResultCell[B] = {
+  override def reduceOpt[A >: B](op: (A, A) => A)(implicit ctx: Scheduler): Option[A] = {
+    def folder(x: A, cell: ResultCell[A]): ResultCell[A] = {
       cell.result = if (cell.isEmpty) x else op(x, cell.result)
       cell
     }
-    aggInternal(folder, ViewUtils.neverStop[B,B])(op)(ctx).toOption
+    aggInternal(folder, ViewUtils.neverStop[A,A])(op)(ctx).toOption
   }
 
   override def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B] = {
@@ -138,21 +138,21 @@ trait BlitzViewImpl[B] extends BlitzView[B] { self =>
     aggregate(0)((_:B, x: Int) => x+1)(_ + _)(ctx)
   override def count(p: B => Boolean)(implicit ctx: Scheduler): Int =
     aggregate(0)((x: B, c: Int) => c  + (if (p(x)) 1 else 0))(_ + _)
-  override def minOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
+  override def minOpt[A >: B]()(implicit ord: Ordering[A], ctx: Scheduler): Option[A] =
     reduceOpt((x: B, y: B) => if (ord.lt(x,y)) x else y)(ctx)
-  override def maxOpt()(implicit ord: Ordering[B], ctx: Scheduler): Option[B] =
-    minOpt()(ord.reverse, ctx)
+  override def maxOpt[A >: B]()(implicit ord: Ordering[A], ctx: Scheduler): Option[A] =
+    minOpt[A]()(ord.reverse, ctx)
   override def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean =
     !exists(x => !p(x))(ctx)
-  override def reduce(op: (B, B) => B)(implicit ctx: Scheduler): B =
+  override def reduce[A >: B](op: (A, A) => A)(implicit ctx: Scheduler): A =
     reduceOpt(op)(ctx).get // throws an Exception if empty
-  override def min()(implicit ord: Ordering[B], ctx: Scheduler): B =
-    minOpt()(ord, ctx).get // throws an Exception if empty
-  override def max()(implicit ord: Ordering[B], ctx: Scheduler): B =
-    maxOpt()(ord, ctx).get // throws an Exception if empty
-  override def sum()(implicit num: Numeric[B], ctx: Scheduler): B =
+  override def min[A >: B]()(implicit ord: Ordering[A], ctx: Scheduler): A =
+    minOpt[A]()(ord, ctx).get // throws an Exception if empty
+  override def max[A >: B]()(implicit ord: Ordering[A], ctx: Scheduler): A =
+    maxOpt[A]()(ord, ctx).get // throws an Exception if empty
+  override def sum[A >: B]()(implicit num: Numeric[A], ctx: Scheduler): A =
     aggregate(num.zero)(num.plus(_, _))(num.plus(_, _))
-  override def product()(implicit num: Numeric[B], ctx: Scheduler): B =
+  override def product[A >: B]()(implicit num: Numeric[A], ctx: Scheduler): A =
     aggregate(num.one)(num.times(_, _))(num.times(_, _))
 }
 
