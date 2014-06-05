@@ -24,7 +24,7 @@ object A {
 
   def vrange(x: Int, y: Int) = (x to y).bview
 
-  def recView(xs: Range): BlitzViewImpl[Int] = {
+  def recView(xs: Range): BlitzView[Int] = {
     if (xs.length > 1) {
       val (l, r) = xs.splitAt(xs.length/2)
       View(recView(l), recView(r))
