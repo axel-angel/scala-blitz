@@ -119,7 +119,7 @@ object A {
     assert(v.forall{_ != 0.0} == l.forall{_ != 0.0})
     assert(v.forall{x => x >= 10 && x <= 20}
         == l.forall{x => x >= 10 && x <= 20})
-    assert(v.forall{_ == 20.0} == l.exists{_ == 20.0})
+    assert(v.forall{_ == 20} == l.forall{_ == 20})
 
     assert(v.sum == l.sum)
     assert(v.product == l.product)
