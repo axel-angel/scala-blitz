@@ -1,26 +1,22 @@
-import scala.collection.views._
-import scala.collection.views.ViewTransforms._
-import scala.collection.par.Scheduler.Implicits.sequential
+import scala.collection.views.BlitzView
 import scala.collection.views.Scope._
+import scala.collection.par.Scheduler.Implicits.sequential
+import scala.collection.immutable.{HashSet, HashMap}
+import scala.collection.mutable.{HashMap => MHashMap, HashSet => MHashSet}
 
 object A {
   def main(args: Array[String]) {
     val xs = (0 to 10).toList
-    assert(Array[Int]().bview.toArray.toList == Nil)
+    testEmpty(Nil, Array[Int]().bview)
+    testSupported()
     testAll(xs, (0 to 10).bview)
     testAll(xs, (0 until 11).bview)
-    testAll(xs, View((0 to 5).bview, (6 to 10).bview))
+    testAll(xs, (0 to 5).bview ++ (6 to 10).bview)
     testAll(xs, recView(0 to 10))
-    testAll(xs, View(
-      View(
-        View(vrange(0,1),vrange(2,3)),
-        View(vrange(4,5),vrange(6,6))
-      ),
-      View(
-        vrange(7,7),
-        vrange(8,10)
-      )
-    ))
+    testAll(xs,
+      ((vrange(0,1) ++ vrange(2,3)) ++ (vrange(4,5) ++ vrange(6,6)))
+      ++ (vrange(7,7) ++ vrange(8,10))
+    )
   }
 
   def vrange(x: Int, y: Int) = (x to y).bview
@@ -28,7 +24,7 @@ object A {
   def recView(xs: Range): BlitzView[Int] = {
     if (xs.length > 1) {
       val (l, r) = xs.splitAt(xs.length/2)
-      View(recView(l), recView(r))
+      recView(l) ++ recView(r)
     } else {
       xs.bview
     }
@@ -41,12 +37,35 @@ object A {
     println("tests passed")
   }
 
+  def testEmpty(l1: List[Int], v1: BlitzView[Int]) {
+    assert(v1.toList == l1)
+    assert(v1.toArray.toList == l1)
+  }
+
   // Compare BlitzView and List transformations, should stay consistent
   def testCombOps(l1: List[Int], v1: BlitzView[Int]) {
     val v = v1 map{_ + 10} filter{_ % 2 == 0} map{_ * 1.0}
     val l = l1 map{_ + 10} filter{_ % 2 == 0} map{_ * 1.0}
     testAgainstLists(l, v)
     testConst(v)
+  }
+
+  def testSupported() {
+    assert(Array(1, 2).bview.toList == List(1,2))
+    assert((1 to 2).bview.toList == List(1,2))
+    assert((1 until 3).bview.toList == List(1,2))
+
+    assert(Map((1, 2)).bview.toList == List((1,2)))
+    assert(Set(1, 2, 2).bview.toList == List(1,2))
+
+    assert(MHashMap((1, 2)).bview.toList == List((1,2)))
+    assert(MHashSet(1, 2, 2).bview.toList == List(1,2))
+
+    assert(Some(10).bview.toList == List(10))
+    assert((None:Option[Int]).bview.toList == Nil)
+    assert(Array(Some(10).bview, (None:Option[Int]).bview).bview.flatten.toList == List(10))
+    assert(Array(Some(10), None).map{_.bview}.bview.flatten.toList == List(10))
+    assert(Array(Some(10).bview).bview.flatten.toList == List(10))
   }
 
   def testToTypes(l1: List[Int], v1: BlitzView[Int])(implicit n: Numeric[Int]) {
