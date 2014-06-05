@@ -1,13 +1,14 @@
 package scala.collection.views
 import ViewTransforms._
+import Scope._
 
 import scala.collection.par._
 import workstealing.ResultCell
 
 /** BlitzView implementation with a two sources Collections. */
 abstract class BlitzViewVV[B] extends BlitzViewImpl[B] { self =>
-  val xs: BlitzViewImpl[B] // 1st source view
-  val ys: BlitzViewImpl[B] // 2nd source view
+  val xs: BlitzView[B] // 1st source view
+  val ys: BlitzView[B] // 2nd source view
 
   override def >>[C](next: ViewTransform[B, C]) = new BlitzViewVV[C] {
     val xs = self.xs >> next

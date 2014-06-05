@@ -5,6 +5,7 @@ import workstealing.ResultCell
 import scala.reflect.ClassTag
 
 trait BlitzView[+B] {
+  self: BlitzViewImpl[B] =>
   /* operators */
   def ++[A >: B](ys: BlitzView[A]): BlitzView[A]
   def :::[A >: B](ys: BlitzView[A]): BlitzView[A]
@@ -18,7 +19,7 @@ trait BlitzView[+B] {
   def take(n: Int): BlitzView[B]
 
   /* methods: V -> other array structure */
-  def toArray[A >: B]()(implicit ct: ClassTag[B], ctx: Scheduler): Array[A]
+  def toArray[A >: B]()(implicit ct: ClassTag[A], ctx: Scheduler): Array[A]
   def toList[A >: B]()(implicit ctx: Scheduler): List[A]
 
   /* methods: V -> V[constant type] */
