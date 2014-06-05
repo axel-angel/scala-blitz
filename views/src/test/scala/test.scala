@@ -33,6 +33,7 @@ object A {
   def testAll(l1: List[Int], v1: BlitzView[Int]) {
     testCombOps(l1, v1)
     testToTypes(l1, v1)
+    testFlat(l1, v1)
 
     println("tests passed")
   }
@@ -66,6 +67,17 @@ object A {
     assert(Array(Some(10).bview, (None:Option[Int]).bview).bview.flatten.toList == List(10))
     assert(Array(Some(10), None).map{_.bview}.bview.flatten.toList == List(10))
     assert(Array(Some(10).bview).bview.flatten.toList == List(10))
+  }
+
+  // Compare BlitzView and List transformations, should stay consistent
+  def testFlat(l1: List[Int], v1: BlitzView[Int]) {
+    def filterOpt(x: Int) = if (x%2 == 0) Some(x) else None
+    val v: BlitzView[Double] =
+      v1.map(filterOpt).map{_.bview}.flatten.map{_*1.0}
+    val l: List[Double] =
+      l1.map(filterOpt).flatten.map{_*1.0}
+    testAgainstLists(l, v) // TODO: exception
+    testConst(v)
   }
 
   def testToTypes(l1: List[Int], v1: BlitzView[Int])(implicit n: Numeric[Int]) {
