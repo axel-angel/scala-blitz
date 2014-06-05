@@ -59,7 +59,7 @@ package workstealing {
   }
 
   object ResultFound extends Scheduler.TerminationCause {
-    def validateResult[R](r: R) = if (r.isInstanceOf[Option[_]]) r else ???
+    def validateResult[R](r: R) = r // XXX: useless now?
   }
 
   final case class ProgressStatus(val start: Int, var progress: Int)
