@@ -5,7 +5,6 @@ import workstealing.ResultCell
 import scala.collection.par.generic.IsReducable
 import scala.reflect.ClassTag
 import scala.collection.par.workstealing.Arrays.Array2ZippableConvertor
-import scala.annotation.implicitNotFound
 import scala.collection.mutable.{HashMap => MHashMap, HashSet => MHashSet}
 import scala.collection.immutable.{HashSet, HashMap}
 
@@ -52,8 +51,8 @@ trait BlitzViewImpl[+B] extends BlitzView[B] { self =>
     View.singleton(y) ++ self
 
   /* methods: V -> V */
-  override def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler) = {
-    def flatMapper(x: B): BlitzView[C] = Scope.arrayIsViewable(ctx)(f(x))
+  override def flatMap[C, U](f: B => U)(implicit ctx: Scheduler, viewable: BlitzView.IsViewable[U, C]) = {
+    def flatMapper(x: B): BlitzView[C] = viewable(f(x))
     new BlitzViewFlattenVs[C, BlitzView, BlitzView] {
       val zss = self >> new ViewTransforms.Map[B,BlitzView[C]](flatMapper)
 
@@ -229,13 +228,10 @@ object ViewUtils {
  *  \-> IsViewable -> Viewable with bview
  */
 object Scope {
+  import BlitzView._
+
   implicit def toViewable[L, A](col: L)(implicit evidence: IsViewable[L, A]) =
     new Viewable[L, A](col)(evidence)
-
-  @implicitNotFound("cannot find a valid conversion from ${L} to BlitzView")
-  trait IsViewable[L, A] {
-    def apply(c: L): BlitzView[A]
-  }
 
   class Viewable[L, A](col: L)(evidence: IsViewable[L, A]) {
     def bview: BlitzView[A] = evidence.apply(col)

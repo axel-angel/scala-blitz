@@ -3,6 +3,7 @@ package scala.collection.views
 import scala.collection.par._
 import workstealing.ResultCell
 import scala.reflect.ClassTag
+import scala.annotation.implicitNotFound
 
 trait BlitzView[+B] {
   self: BlitzViewImpl[B] =>
@@ -12,7 +13,7 @@ trait BlitzView[+B] {
   def ::[A >: B](y: A): BlitzView[A]
 
   /* methods: V -> V */
-  def flatMap[C](f: B => Array[C])(implicit ctx: Scheduler): BlitzView[C]
+  def flatMap[C, U](f: B => U)(implicit ctx: Scheduler, viewable: BlitzView.IsViewable[U, C]): BlitzView[C]
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
   def drop(n: Int): BlitzView[B]
@@ -47,3 +48,10 @@ trait BlitzView[+B] {
   def forall(p: B => Boolean)(implicit ctx: Scheduler): Boolean
 }
 
+
+object BlitzView {
+  @implicitNotFound("cannot find a valid conversion from ${L} to BlitzView")
+  trait IsViewable[L, A] {
+    def apply(c: L): BlitzView[A]
+  }
+}
