@@ -170,7 +170,7 @@ object View {
   }
 
   def range(x: Int, y: Int)(implicit ctx: Scheduler): BlitzView[Int] = {
-    val xs = x until (y+1)
+    val xs = x to y
     apply(xs.toPar)(rangeIsZippable(ctx))
   }
 
