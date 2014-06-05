@@ -6,6 +6,7 @@ import scala.collection.views.Scope._
 object A {
   def main(args: Array[String]) {
     val xs = (0 to 10).toList
+    assert(Array[Int]().bview.toArray.toList == Nil)
     testAll(xs, (0 to 10).bview)
     testAll(xs, (0 until 11).bview)
     testAll(xs, View((0 to 5).bview, (6 to 10).bview))

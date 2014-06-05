@@ -69,6 +69,7 @@ trait BlitzViewImpl[+B] extends BlitzView[B] { self =>
   override def toArray[A >: B]()(implicit ct: ClassTag[A], ctx: Scheduler): Array[A] = {
     val tmp = toList_[A]().toArray[A]
     val sz = tmp.size - 1
+    if (sz < 0) return tmp
     val rng = 0 to (sz / 2)
     def swap(x: Int) = {
       val t = tmp(x)
