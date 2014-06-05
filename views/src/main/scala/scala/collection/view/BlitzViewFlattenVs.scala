@@ -14,12 +14,12 @@ abstract class BlitzViewFlattenVs[U, B[_] <: BlitzView[_], A[_] <: BlitzView[_]]
 
   }
 
-  override def aggInternal[R](op: (U, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
+  override def genericInvoke[R](op: (U, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
   {
     def folder(xss: A[U], rc: ResultCell[R]): ResultCell[R] = {
-      val xrc = xss.aggInternal(op, pstop)(reducer)(ctx)
+      val xrc = xss.genericInvoke(op, pstop)(reducer)(ctx)
       ViewUtils.rcCombine(reducer)(rc, xrc)
     }
-    internalAPI(zss).aggInternal(folder, pstop)(reducer)(ctx)
+    internalAPI(zss).genericInvoke(folder, pstop)(reducer)(ctx)
   }
 }

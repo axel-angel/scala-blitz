@@ -38,7 +38,7 @@ object ViewTransforms {
 trait BlitzViewImpl[+B] extends BlitzView[B] { self =>
   /* internals */
   def >>[C](next: ViewTransform[B, C]): BlitzView[C]
-  def aggInternal[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R]
+  def genericInvoke[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R]
 
 
   /* operators */
@@ -105,7 +105,7 @@ trait BlitzViewImpl[+B] extends BlitzView[B] { self =>
       cell
     }
     val stopper = ViewUtils.neverStop[B,R]_
-    aggInternal(folder, stopper)(reducer)(ctx).toOption.getOrElse(z)
+    genericInvoke(folder, stopper)(reducer)(ctx).toOption.getOrElse(z)
   }
 
   override def reduceOpt[A >: B](op: (A, A) => A)(implicit ctx: Scheduler): Option[A] = {
@@ -113,7 +113,7 @@ trait BlitzViewImpl[+B] extends BlitzView[B] { self =>
       cell.result = if (cell.isEmpty) x else op(x, cell.result)
       cell
     }
-    aggInternal(folder, ViewUtils.neverStop[A,A])(op)(ctx).toOption
+    genericInvoke(folder, ViewUtils.neverStop[A,A])(op)(ctx).toOption
   }
 
   override def find(p: B => Boolean)(implicit ctx: Scheduler): Option[B] = {
@@ -121,7 +121,7 @@ trait BlitzViewImpl[+B] extends BlitzView[B] { self =>
       if (rc.isEmpty && p(x)) rc.result = x
       rc
     }
-    aggInternal(folder, ViewUtils.nonEmptyStop[B,B])((x, y) => x).toOption
+    genericInvoke(folder, ViewUtils.nonEmptyStop[B,B])((x, y) => x).toOption
   }
 
   override def exists(p: B => Boolean)(implicit ctx: Scheduler): Boolean = {
@@ -130,7 +130,7 @@ trait BlitzViewImpl[+B] extends BlitzView[B] { self =>
       rc
     }
     val stopper = ViewUtils.equalStop(true)_
-    aggInternal(folder, stopper)(_ || _).toOption.getOrElse(false)
+    genericInvoke(folder, stopper)(_ || _).toOption.getOrElse(false)
   }
 
   override def size()(implicit ctx: Scheduler): Int =

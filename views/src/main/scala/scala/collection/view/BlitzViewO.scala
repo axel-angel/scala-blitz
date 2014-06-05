@@ -16,7 +16,7 @@ abstract class BlitzViewO[B] extends BlitzViewImpl[B] { self =>
     def transform = self.transform >> next
   }
 
-  override def aggInternal[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
+  override def genericInvoke[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
   {
     val rc = new ResultCell[R]
     ox match {

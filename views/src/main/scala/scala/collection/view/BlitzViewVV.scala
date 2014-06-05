@@ -15,10 +15,10 @@ abstract class BlitzViewVV[B] extends BlitzViewImpl[B] { self =>
     val ys = self.ys >> next
   }
 
-  override def aggInternal[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
+  override def genericInvoke[R](op: (B, ResultCell[R]) => ResultCell[R], pstop: ResultCell[R] => Boolean)(reducer: (R, R) => R)(implicit ctx: Scheduler): ResultCell[R] =
   {
-    val rcx = xs.aggInternal(op, pstop)(reducer)(ctx)
-    val rcy = ys.aggInternal(op, pstop)(reducer)(ctx)
+    val rcx = xs.genericInvoke(op, pstop)(reducer)(ctx)
+    val rcy = ys.genericInvoke(op, pstop)(reducer)(ctx)
     ViewUtils.rcCombine(reducer)(rcx, rcy)
   }
 }
