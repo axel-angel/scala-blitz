@@ -313,12 +313,12 @@ object Scope {
 
   /* Optional */
 
-  implicit def optionIsViewable[T] =
-    new IsViewable[Option[T], T] {
-      override def apply(_ox: Option[T]) = {
+  implicit def optionIsViewable[T, U <: Option[T]](implicit conv: U => Option[T]) =
+    new IsViewable[U, T] {
+      override def apply(_ox: U) = {
         new BlitzViewO[T] {
           type A = T
-          val ox = _ox
+          val ox = conv(_ox)
           def transform = new ViewTransforms.Identity()
         }
       }
