@@ -1,6 +1,6 @@
 package scala.collection.views
 import ViewTransforms._
-import Scope._
+import BlitzViewImpl._
 
 import scala.collection.par._
 import workstealing.ResultCell

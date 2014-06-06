@@ -205,6 +205,7 @@ object ViewUtils {
       }
     }
 
+  // Declare useful stoppers for genericInvoke stoppable function
   def toStopper[T,R](pstop: ResultCell[R] => Boolean)
     (x: T, rc: ResultCell[R]): Boolean = pstop(rc)
   def neverStop[T,R](rc: ResultCell[R]): Boolean = false
@@ -213,29 +214,13 @@ object ViewUtils {
     !rc.isEmpty && rc.result == v
 }
 
-/*
- * We provide implicit conversions for certain native types. The user can call
- * bview on the supported classes, the implicit IsViewable for this type kicks
- * in and attach the bview method to it by converting the type to Viewable.
- *
- * As follows: toViewable[L, A] -> search for an implicit IsViewable[L, A]
- * then: get the appropriate implicit, for eg: arrayIsViewable
- * this requires an implicit Scheduler in scope, given this one, we can create
- * an IsViewable instance that can be used as an evidence applied in toViewable.
- *
- * toViewable <- arrayIsViewable (<- Scheduler)
- *  \-> IsViewable -> Viewable with bview
+/* Provides conversions from collections to our specialized BlitzViewImpl.
+ * This is based on implicit evidence, see toViewable.
  */
-object Scope {
+object BlitzViewImpl {
   import BlitzView._
 
-  implicit def toViewable[L, A](col: L)(implicit evidence: IsViewable[L, A]) =
-    new Viewable[L, A](col)(evidence)
-
-  class Viewable[L, A](col: L)(evidence: IsViewable[L, A]) {
-    def bview: BlitzView[A] = evidence.apply(col)
-  }
-
+  /* provides a way to lift BlitzView to BlitzViewImpl (compile-time checked) */
   private[views] implicit def internalAPI[T[_] <: BlitzView[_], EL](x: T[EL]): BlitzViewImpl[EL] = x.asInstanceOf[BlitzViewImpl[EL]]
 
   /* Specialized simple data lists */
@@ -274,9 +259,6 @@ object Scope {
 
   /* More general slower Set/Map implementation */
 
-  // TODO: should we convert to Array, for immutable, stays correct
-  // Or we specialize with hashSetIsReducable (cf: workstealing)
-  // TODO: how to factorize with arrayIsViewable?
   implicit def setIsViewable[T](implicit ctx: Scheduler, ct: ClassTag[T]) =
     new IsViewable[Set[T], T] {
       override def apply(c: Set[T]): BlitzView[T] = {
@@ -284,7 +266,6 @@ object Scope {
       }
     }
 
-  // TODO: same as setIsViewable
   implicit def mapIsViewable[K,V](implicit ctx: Scheduler, ct1: ClassTag[Tuple2[K,V]]) =
     new IsViewable[Map[K,V], (K,V)] {
       override def apply(c: Map[K,V]): BlitzView[(K,V)] = {
@@ -310,7 +291,7 @@ object Scope {
     }
 
 
-  /* Optional */
+  /* Option */
 
   implicit def optionIsViewable[T, U <: Option[T]](implicit conv: U => Option[T]) =
     new IsViewable[U, T] {
@@ -324,7 +305,7 @@ object Scope {
     }
 
 
-  /* Provides 'flatten' on nested Views */
+  /* Provides implicit-extension for 'flatten' on nested Views */
 
   implicit def addFlatten[U, B[_] <: BlitzView[_], C[_] <: BlitzView[_]](view: B[C[U]]) =
     new ViewWithFlatten[U, B, C](view)

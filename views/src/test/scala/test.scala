@@ -1,5 +1,6 @@
 import scala.collection.views.BlitzView
-import scala.collection.views.Scope._
+import scala.collection.views.BlitzView._
+import scala.collection.views.BlitzViewImpl._
 import scala.collection.par.Scheduler.Implicits.sequential
 import scala.collection.immutable.{HashSet, HashMap}
 import scala.collection.mutable.{HashMap => MHashMap, HashSet => MHashSet}
@@ -76,7 +77,7 @@ object A {
       v1.map(filterOpt).map{_.bview}.flatten.map{_*1.0}
     val l: List[Double] =
       l1.map(filterOpt).flatten.map{_*1.0}
-    testAgainstLists(l, v) // TODO: exception
+    testAgainstLists(l, v)
     testConst(v)
   }
 
@@ -93,7 +94,6 @@ object A {
   }
 
   // TODO: add tests for exceptions (eg: reduce, min, max, …)
-  // TODO: add tests for *Opt
 
   // Compare the results with different folding methods
   def testAgainstLists(l: List[Double], v: BlitzView[Double]) {

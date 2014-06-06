@@ -3,7 +3,7 @@ import ViewTransforms._
 
 import scala.collection.par._
 import workstealing.ResultCell
-import Scope._
+import BlitzViewImpl._
 
 /** BlitzView implementation with multiple flattened sources Collections. */
 abstract class BlitzViewFlattenVs[U, B[_] <: BlitzView[_], A[_] <: BlitzView[_]] extends BlitzViewImpl[U] { self =>

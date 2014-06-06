@@ -5,14 +5,19 @@ import workstealing.ResultCell
 import scala.reflect.ClassTag
 import scala.annotation.implicitNotFound
 
-trait BlitzView[+B] {
-  self: BlitzViewImpl[B] =>
+/*
+ * BlitzView: Lightweight, non-strict and parallel-efficient views (prototype).
+ *
+ * Guarantee constant time and constant memory for transformer operations.
+ * Based on Scala Blitz for configurable parallelism.
+ */
+trait BlitzView[+B] { self: BlitzViewImpl[B] =>
   /* operators */
   def ++[A >: B](ys: BlitzView[A]): BlitzView[A]
   def :::[A >: B](ys: BlitzView[A]): BlitzView[A]
   def ::[A >: B](y: A): BlitzView[A]
 
-  /* methods: V -> V */
+  /* methods (transformers): V -> V */
   def flatMap[C, U](f: B => U)(implicit ctx: Scheduler, viewable: BlitzView.IsViewable[U, C]): BlitzView[C]
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
@@ -47,9 +52,29 @@ trait BlitzView[+B] {
 }
 
 
+/*
+ * We provide implicit conversions for certain native types. The user can call
+ * bview on the supported classes, the implicit IsViewable for this type kicks
+ * in and attach the bview method to it by converting the type to Viewable.
+ *
+ * As follows: toViewable[L, A] -> search for an implicit IsViewable[L, A]
+ * then: get the appropriate implicit, for eg: arrayIsViewable
+ * this requires an implicit Scheduler in scope, given this one, we can create
+ * an IsViewable instance that can be used as an evidence applied in toViewable.
+ *
+ * toViewable <- arrayIsViewable (<- Scheduler)
+ *  \-> IsViewable -> Viewable with bview
+ */
 object BlitzView {
   @implicitNotFound("cannot find a valid conversion from ${L} to BlitzView")
   trait IsViewable[L, A] {
     def apply(c: L): BlitzView[A]
+  }
+
+  implicit def toViewable[L, A](col: L)(implicit evidence: IsViewable[L, A]) =
+    new Viewable[L, A](col)(evidence)
+
+  class Viewable[L, A](col: L)(evidence: IsViewable[L, A]) {
+    def bview: BlitzView[A] = evidence.apply(col)
   }
 }
