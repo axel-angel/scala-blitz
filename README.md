@@ -27,7 +27,7 @@ import scala.collection.par.Scheduler.Implicits.sequential
 import collection.mutable.HashMap
 
 val m = HashMap((1,2))
-val v = m.view.map{case (x,y) => x+y}
+val v = m.bview.map{case (x,y) => x+y}
 v.toArray // Array(3)
 v.sum // 3
 m += ((3,4))
