@@ -61,8 +61,6 @@ trait BlitzViewImpl[+B] extends BlitzView[B] { self =>
 
   override def map[C](f: B => C) = self >> new ViewTransforms.Map[B,C](f)
   override def filter(p: B => Boolean) = self >> new ViewTransforms.Filter[B](p)
-  override def drop(n: Int): BlitzView[B] = ??? // TODO
-  override def take(n: Int): BlitzView[B] = ??? // TODO
 
 
   /* methods: V -> other array structure */

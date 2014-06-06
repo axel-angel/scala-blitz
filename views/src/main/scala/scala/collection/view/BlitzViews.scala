@@ -16,8 +16,6 @@ trait BlitzView[+B] {
   def flatMap[C, U](f: B => U)(implicit ctx: Scheduler, viewable: BlitzView.IsViewable[U, C]): BlitzView[C]
   def map[C](f: B => C): BlitzView[C]
   def filter(p: B => Boolean): BlitzView[B]
-  def drop(n: Int): BlitzView[B]
-  def take(n: Int): BlitzView[B]
 
   /* methods: V -> other array structure */
   def toArray[A >: B]()(implicit ct: ClassTag[A], ctx: Scheduler): Array[A]
