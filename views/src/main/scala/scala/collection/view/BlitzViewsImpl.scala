@@ -223,6 +223,13 @@ object BlitzViewImpl {
   /* provides a way to lift BlitzView to BlitzViewImpl (compile-time checked) */
   private[views] implicit def internalAPI[T[_] <: BlitzView[_], EL](x: T[EL]): BlitzViewImpl[EL] = x.asInstanceOf[BlitzViewImpl[EL]]
 
+  /* BlitzView is Viewable */
+
+  implicit def bviewIsViewable[T] =
+    new IsViewable[BlitzView[T], T] {
+      override def apply(v: BlitzView[T]): BlitzView[T] = v
+    }
+
   /* Specialized simple data lists */
 
   implicit def arrayIsViewable[T](implicit ctx: Scheduler) =
