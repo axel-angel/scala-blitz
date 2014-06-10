@@ -34,11 +34,11 @@ val u = v.map(_ + 10)
 ```
 
 ```scala
-val v = Array(0,1,2,3,4).bview
-val v2 = v.flatMap{x => Array(x+10)}
-v.toArray // Array(0, 1, 2, 3, 4)
-val v3 = v.flatMap{_ => v2.filter{_ % 2 == 0}}
-v3.toArray // Array(10,12,14,10,12,14,10,12,14,10,12,14,10,12,14)
+val v = Array(1,2,3,4).bview
+val v2 = v.flatMap{x => Array(x, x+10)}
+v.toArray // Array(1, 2, 3, 4)
+val v3 = v.flatMap{x => v2.filter{_ % x == 0}}
+v3.toArray // Array(1,11,2,12,3,13,4,14,2,12,4,14,12,3,12,4)
 ```
 
 ```scala
