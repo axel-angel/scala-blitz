@@ -7,13 +7,11 @@ Prototype of BlitzView: Lightweight, non-strict and parallel-efficient views.
  * Based on Scala Blitz for configurable parallelism.
 
 See the paper at: https://github.com/axel-angel/blitzview-report .
-The code is in the views folder.
-Contains ScalaBlitz: http://scala-blitz.github.io/home/documentation/
+Automatic dependency on ScalaBlitz.
 
 # Compile and REPL:
 ```shell
 $ sbt
-> project views
 > compile
 > console
 ```
